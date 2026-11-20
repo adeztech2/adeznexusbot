@@ -1,0 +1,25 @@
+{
+  "name": "parapanda",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20.x",
+    "npm": ">=10.x"
+  },
+  "dependencies": {
+    "gifted-baileys": "github:mauricegift/baileys-new",
+    "axios": "^1.6.7",
+    "better-sqlite3": "*",
+    "express": "*",
+    "form-data": "*",
+    "gifted-btns": "*",
+    "pg": "*",
+    "pino": "*",
+    "sharp": "*",
+    "wa-sticker-formatter": "*"
+  }
+}

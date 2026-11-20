@@ -1,0 +1,9 @@
+node_modules/
+baileys-new/
+lib/session/*.db
+lib/session/*.db-shm
+lib/session/*.db-wal
+auth_info_baileys/
+.env
+.replit
+package-lock.json
