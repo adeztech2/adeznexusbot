@@ -6,13 +6,13 @@
   <tr>
     <td align="center">
       <b>FORK</b><br><br>
-      <a href="https://github.com/adeztech2/nexus/fork">
+      <a href="https://github.com/adeztech2/baileys/fork">
         <img src="https://img.shields.io/badge/FORK-this%20repo-purple" alt="Fork" width="150">
       </a>
     </td>
     <td align="center">
       <b>DOWNLOAD ZIP</b><br><br>
-      <a href="https://github.com/adeztech2/nexus/archive/refs/heads/main.zip">
+      <a href="https://github.com/adeztech2/baileys/archive/refs/heads/main.zip">
         <img src="https://img.shields.io/badge/Download-ZIP-blue" alt="Download zip" width="200">
       </a>
     </td>
@@ -20,11 +20,11 @@
   <tr>
     <td colspan="2" align="center">
       <b>DEPLOY</b><br><br>
-      <a href="https://render.com/deploy?repo=https://github.com/adeztech2/nexus">
+      <a href="https://render.com/deploy?repo=https://github.com/adeztech2/baileys">
         <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render">
       </a>
       &nbsp;
-      <a href="https://heroku.com/deploy?template=https://github.com/adeztech2/nexus">
+      <a href="https://heroku.com/deploy?template=https://github.com/adeztech2/baileys">
         <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
       </a>
     </td>
