@@ -33,10 +33,13 @@ import {
 } from './lib/connection/groupCache.js';
 import config from './config.js';
 import { normalizeJid as _normalizeJid, getUptime, setBotStartTime, getBotStartTime } from './lib/utils/botUtils.js';
-import suppressBaileysLogs from 'gifted-baileys/suppress-logs';
 
 // ── Suppress noisy logs ────────────────────────────────────────────────────
-suppressBaileysLogs();
+const _noisy = /Closing session|Opening session|Closing open session|Removing old closed session|Migrating session|SessionEntry|Session already closed|Session already open/;
+for (const m of ['log', 'info', 'warn']) {
+  const orig = console[m].bind(console);
+  console[m] = (...a) => { if (typeof a[0] === 'string' && _noisy.test(a[0])) return; orig(...a); };
+}
 
 // ── Express ────────────────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -326,3 +329,4 @@ app.listen(config.port, '0.0.0.0', () => {
   console.log(`🌐 ADEZ NEXUS server running on port ${config.port}`);
   startBot();
 });
+                    
