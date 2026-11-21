@@ -33,6 +33,7 @@ import {
 } from './lib/connection/groupCache.js';
 import config from './config.js';
 import { startKeepAlive } from './lib/keepAlive.js';
+import { enableVerifiedReplies } from './lib/verifiedQuote.js';
 import { normalizeJid as _normalizeJid, getUptime, setBotStartTime, getBotStartTime } from './lib/utils/botUtils.js';
 
 // ── Suppress noisy logs ────────────────────────────────────────────────────
@@ -111,6 +112,7 @@ async function startBot() {
     });
 
     sock._manualClose = false;
+    enableVerifiedReplies(sock);
     store.bind(sock.ev);
     sock.ev.on('creds.update', saveCreds);
 
@@ -333,4 +335,4 @@ app.listen(config.port, '0.0.0.0', () => {
   startBot();
 });
 
-                                                        
+      
