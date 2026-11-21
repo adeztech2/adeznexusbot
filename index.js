@@ -32,6 +32,7 @@ import {
   clearGroupCache
 } from './lib/connection/groupCache.js';
 import config from './config.js';
+import { startKeepAlive } from './lib/keepAlive.js';
 import { normalizeJid as _normalizeJid, getUptime, setBotStartTime, getBotStartTime } from './lib/utils/botUtils.js';
 
 // ── Suppress noisy logs ────────────────────────────────────────────────────
@@ -66,6 +67,7 @@ let   retryCount       = 0;
 function normalizeJid(jid) { return _normalizeJid(jid); }
 
 app.get('/',       (req, res) => res.sendFile(path.join(__dirname, 'lib', 'status.html')));
+app.get('/health', (req, res) => res.status(200).send('ok'));
 app.get('/status', (req, res) => res.json({ status: botStatus, phoneNumber: botPhoneNumber, uptime: getUptime(), lastSeen: lastSeenTime }));
 
 async function startBot() {
@@ -327,6 +329,8 @@ process.on('unhandledRejection',  console.error);
 // ── Start ──────────────────────────────────────────────────────────────────
 app.listen(config.port, '0.0.0.0', () => {
   console.log(`🌐 ADEZ NEXUS server running on port ${config.port}`);
+  startKeepAlive();
   startBot();
 });
-                    
+
+                                                        
