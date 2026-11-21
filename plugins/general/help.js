@@ -58,25 +58,39 @@ export default {
     const now  = new Date();
     const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: TZ });
 
+    const pad = (str, w) => str + ' '.repeat(Math.max(0, w - [...str].length));
+
     let text =
-      `🐼 *${BOT_NAME.toUpperCase()} v1.0.0*\n` +
-      `─────────────────\n` +
-      `👤 *User:* ${userName}\n` +
-      `🔑 *Prefix:* \`${PREFIX}\`\n` +
-      `🌐 *Mode:* ${MODE === 'private' ? 'Private' : 'Public'}\n` +
-      `🕐 *Time:* ${time}\n` +
-      `📦 *Commands:* ${totalCmds}\n` +
+      `╭━━━〔 ⚡ *${BOT_NAME.toUpperCase()}* ⚡ 〕━━━╮\n` +
+      `┃ 👤 *User*     : ${userName}\n` +
+      `┃ 🔑 *Prefix*   : ${PREFIX}\n` +
+      `┃ 🌐 *Mode*     : ${MODE === 'private' ? 'Private' : 'Public'}\n` +
+      `┃ 🕐 *Time*     : ${time}\n` +
+      `┃ 📦 *Commands* : ${totalCmds}\n` +
+      `╰━━━━━━━━━━━━━━━━━━━━━━╯\n` +
       readmore + '\n';
 
     for (const cat of Object.keys(categories).sort()) {
-      const icon  = CAT_ICONS[cat] || '📦';
-      const cmds  = categories[cat].sort();
-      const count = cmds.length;
+      const icon = CAT_ICONS[cat] || '📦';
+      const cmds = categories[cat].sort().map(c => PREFIX + c);
+      const w    = Math.max(...cmds.map(c => [...c].length));
+      const line = '─'.repeat(w + 2);
 
-      text += `${icon} *${cat.toUpperCase()}* [${count}]\n`;
-      text += cmds.map(c => `  ╺ ${PREFIX}${c}`).join('\n');
-      text += '\n\n';
+      // two commands per row, drawn as a monospace table
+      const rows = [];
+      for (let i = 0; i < cmds.length; i += 2) {
+        rows.push(`│ ${pad(cmds[i], w)} │ ${pad(cmds[i + 1] || '', w)} │`);
+      }
+
+      text += `${icon} *${cat.toUpperCase()}* [${cmds.length}]\n`;
+      text += '```\n' +
+        `┌${line}┬${line}┐\n` +
+        rows.join('\n') + '\n' +
+        `└${line}┴${line}┘\n` +
+        '```\n\n';
     }
+
+    text += `ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴀᴅᴇᴢ ᴛᴇᴄʜ`;
 
     m.reply(text.trimEnd());
   },
