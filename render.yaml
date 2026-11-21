@@ -17,7 +17,7 @@ services:
       - key: OWNER_NUMBER
         sync: false
       - key: DATABASE_URL
-        sync: false
+        value: postgresql://postgres.utzjmucidbuplbozqkkz:Umeniruka sana😂😂,,show some love back💯@aws-0-REGION.pooler.supabase.com:5432/postgres
       - key: API_KEYS
         sync: false
       - key: GIFTED_TECH_API
@@ -26,3 +26,7 @@ services:
         value: gifted
       - key: KEEP_ALIVE_MINUTES
         value: "4"
+      - key: MODE
+        value: public
+      - key: PREFIX
+        value: "."
