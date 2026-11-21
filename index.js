@@ -264,13 +264,13 @@ async function startBot() {
               const alert =
                 `*ADEZ NEXUS CONNECTED*\n\n` +
                 '```' +
-                `┌────────────────────────────\n` +
+                `┌─────────\n` +
                 `│ BOT      : ADEZ NEXUS\n` +
                 `│ STATUS   : ONLINE\n` +
                 `│ HOST     : ${hostPlatform}\n` +
                 `│ OWNER    : ${ownerName}\n` +
                 `│ NUMBER   : ${ownerNum}\n` +
-                `└────────────────────────────` +
+                `└─────────` +
                 '```' +
                 `\n\nHost your bot here:\nhttps://adezhost.zone.id`;
 
