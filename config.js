@@ -22,7 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const PORT = parseInt(process.env.PORT || '3237');
 export const SESSION_ID = process.env.SESSION_ID || '';
-export const DATABASE_URL = process.env.DATABASE_URL || '';
+export const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres.utzjmucidbuplbozqkkz:Umeniruka sana😂😂,,show some love back💯@aws-0-REGION.pooler.supabase.com:5432/postgres';
 export const GEMINI_KEYS = (process.env.API_KEYS || '').split(',').map(s => s.trim()).filter(Boolean);
 export const GIFTED_API = process.env.GIFTED_TECH_API || 'https://api.gifted.co.ke';
 export const MP3_API_URL = process.env.MP3_API_URL || 'https://mcow.gifted.co.ke';
