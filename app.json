@@ -1,0 +1,21 @@
+{
+  "name": "Nexus WhatsApp Bot",
+  "description": "ADEZ TECH Nexus - WhatsApp bot built on Baileys",
+  "repository": "https://github.com/adeztech2/nexus",
+  "keywords": ["whatsapp", "bot", "baileys", "nodejs"],
+  "stack": "heroku-24",
+  "buildpacks": [{ "url": "heroku/nodejs" }],
+  "formation": {
+    "web": { "quantity": 1, "size": "basic" }
+  },
+  "addons": [{ "plan": "heroku-postgresql:essential-0" }],
+  "env": {
+    "SESSION_ID": { "description": "Your WhatsApp session ID", "required": true },
+    "OWNER_NUMBER": { "description": "Owner number with country code, no +", "value": "254101579396" },
+    "APP_URL": { "description": "Your app URL for keep-alive, e.g. https://your-app-name.herokuapp.com", "required": true },
+    "API_KEYS": { "description": "Gemini API keys, comma separated", "required": false },
+    "GIFTED_TECH_API": { "value": "https://api.gifted.co.ke" },
+    "GIFTED_API_KEY": { "value": "gifted" },
+    "KEEP_ALIVE_MINUTES": { "value": "4" }
+  }
+}
