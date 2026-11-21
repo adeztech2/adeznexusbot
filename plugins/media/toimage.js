@@ -35,7 +35,7 @@ export default {
 
       const type = getStickerType(buf);
       if (type === 'lottie') {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply('❌ Lottie/vector stickers cannot be converted to images.');
       }
 
@@ -54,7 +54,7 @@ export default {
       await m.react('✅');
     } catch (err) {
       console.error('[toimage] error:', err.message);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Failed: ' + err.message);
     }
   },

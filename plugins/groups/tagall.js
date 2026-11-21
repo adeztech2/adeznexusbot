@@ -2,7 +2,7 @@ export default {
   name: 'tagall',
   aliases:     ['tageveryone', 'all'],
   description: 'Tag all group members',
-  usage: '!tagall <message>',
+  usage: 'tagall <message>',
   category: 'group',
   owner: false,
   group: true,

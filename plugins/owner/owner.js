@@ -47,7 +47,7 @@ export default {
       await m.reply(`\`\`\`${output}\`\`\``);
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       await m.reply(`❌ *Error:*\n\`\`\`${err.message}\`\`\``);
     }
   },

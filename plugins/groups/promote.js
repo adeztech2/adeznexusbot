@@ -2,9 +2,9 @@ import { getMentionedJids } from '../../lib/connection/helper.js';
 
 export default {
   name:        'promote',
-  aliases:     ['admin', 'p'],
+  aliases:     ['admin'],
   description: 'Promote member to admin',
-  usage:       '!promote @user  |  reply to message  |  !promote 254711111111',
+  usage:       'promote @user  |  reply to message  |  promote 254711111111',
   category:    'group',
   owner:       false,
   group:       true,

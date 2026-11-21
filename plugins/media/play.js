@@ -65,7 +65,7 @@ export default {
         try {
           result = await waterfallDownload(song.url, AUDIO_ENDPOINTS, { timeout: 40000 });
         } catch {
-          await m.react('❌');
+          await m.react('❌'); m._failed = true;
           return m.reply('❌ All download services unavailable. Try again later.');
         }
       }
@@ -125,7 +125,7 @@ export default {
 
     } catch (error) {
       console.error('Play command error:', error);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Failed to search. Please try again later.');
     }
   },

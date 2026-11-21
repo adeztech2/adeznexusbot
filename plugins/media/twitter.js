@@ -67,7 +67,7 @@ export default {
       sock.ev.on('messages.upsert', handle);
       setTimeout(() => sock.ev.off('messages.upsert', handle), 300_000);
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ Twitter download failed: ${err.message}`);
     }
   },

@@ -251,7 +251,7 @@ export default {
 
     } catch (err) {
       console.error('[sticker] error:', err.message);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Failed to create sticker: ' + err.message);
     }
   },

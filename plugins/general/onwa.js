@@ -31,7 +31,7 @@ export default {
           `_This number is registered on WhatsApp._`
         );
       } else {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply(
           `❌ *Not on WhatsApp*\n\n` +
           `📞 *Number:* +${raw}\n\n` +

@@ -1,12 +1,43 @@
 import { downloadMediaMessage } from 'gifted-baileys';
 import { lidToJid } from '../../lib/connection/helper.js';
 import { getSetting } from '../../lib/database/settings.js';
+import { MessageStore } from '../../lib/database/session.js';
+
+const MEDIA_TYPES = ['imageMessage', 'videoMessage', 'audioMessage'];
+
+// Strip view-once / ephemeral wrappers; report whether it was view-once
+function unwrap(message) {
+  let cur = message;
+  let viewOnce = false;
+  for (let i = 0; i < 4 && cur; i++) {
+    const vo = cur.viewOnceMessageV2 || cur.viewOnceMessageV2Extension || cur.viewOnceMessage;
+    if (vo) { viewOnce = true; cur = vo.message; continue; }
+    if (cur.ephemeralMessage) { cur = cur.ephemeralMessage.message; continue; }
+    break;
+  }
+  return { msg: cur, viewOnce };
+}
+
+function findMedia(msg) {
+  const type = MEDIA_TYPES.find(k => msg?.[k]);
+  return type ? { type, media: msg[type] } : null;
+}
+
+// WhatsApp strips url/directPath from the quoted copy of view-once media
+const hasSource = (media) => !!(media?.url || media?.directPath);
+
+// Messages come back from the store with Buffers flattened to {type:'Buffer',data:[...]}
+const revive = (o) => JSON.parse(JSON.stringify(o), (_, v) =>
+  (v && v.type === 'Buffer' && Array.isArray(v.data)) ? Buffer.from(v.data) : v);
+
+let _store = null;
+const getStore = () => (_store ||= new MessageStore());
 
 export default {
   name: 'vv',
   aliases: ['viewonce', 'rvo'],
   description: 'Save view once or any media by replying to it',
-  usage: '!vv (reply to image/video/viewonce)',
+  usage: 'vv (reply to image/video/viewonce)',
   category: 'owner',
   owner: true,
   group: false,
@@ -21,21 +52,36 @@ export default {
     }
 
     try {
-      let actualMessage = quoted.message;
-      let isViewOnce    = false;
+      let { msg: actualMessage, viewOnce: isViewOnce } = unwrap(quoted.message);
+      let found = findMedia(actualMessage);
+      let source = { message: actualMessage };
 
-      const viewOnceMsg = quoted.message?.viewOnceMessageV2 || quoted.message?.viewOnceMessage;
-      if (viewOnceMsg) {
-        actualMessage = viewOnceMsg.message;
-        isViewOnce    = true;
+      // The quoted copy has no download info → use the original message saved when it arrived
+      if (!found || !hasSource(found.media)) {
+        try {
+          const orig = await getStore().loadMessage(m.from, quoted.id);
+          if (orig?.message) {
+            const u = unwrap(revive(orig.message));
+            const f = findMedia(u.msg);
+            if (f && hasSource(f.media)) {
+              actualMessage = u.msg;
+              found = f;
+              isViewOnce = isViewOnce || u.viewOnce;
+              source = { key: orig.key, message: u.msg };
+            }
+          }
+        } catch (_) {}
       }
 
-      const messageType = Object.keys(actualMessage)[0];
-      const mediaMessage = actualMessage[messageType];
-
-      if (!['imageMessage', 'videoMessage', 'audioMessage'].includes(messageType)) {
+      if (!found) {
         return m.reply('❌ Please reply to an image, video, or audio message!');
       }
+      if (!hasSource(found.media)) {
+        return m.reply('❌ I can\'t download that one. WhatsApp removes view-once media from replies, and I only keep received messages for 10 minutes. Reply with !vv soon after it arrives.');
+      }
+
+      const messageType  = found.type;
+      const mediaMessage = found.media;
 
       // Resolve LID → phone JID so the sender number is always a real phone number
       const rawSenderJid = quoted.participant || quoted.sender || m.sender || '';
@@ -56,7 +102,7 @@ export default {
       }
 
       const buffer = await downloadMediaMessage(
-        { message: actualMessage },
+        source,
         'buffer',
         {},
         { logger: sock.logger, reuploadRequest: sock.updateMediaMessage }
@@ -76,9 +122,10 @@ export default {
       }
 
     } catch (err) {
-      console.error('Error saving media:', err);
-      await m.react('❌');
+      console.error('Error saving media:', err.message);
+      await m.react('❌'); m._failed = true;
       throw new Error('Failed to save media!');
     }
   }
 };
+        

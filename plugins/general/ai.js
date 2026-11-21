@@ -13,7 +13,7 @@ async function queryAI(endpoint, query, m) {
     await m.react('✅');
     return m.reply(`${res.data.result}\n\n${getFooter()}`);
   } catch (err) {
-    await m.react('❌');
+    await m.react('❌'); m._failed = true;
     return m.reply(`❌ AI error: ${err.message}`);
   }
 }

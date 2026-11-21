@@ -2,7 +2,7 @@ export default {
   name: 'gname',
   aliases: ['setsubject', 'changename'],
   description: 'Change group name',
-  usage: '!setname <new name>',
+  usage: 'setname <new name>',
   category: 'group',
   owner: false,
   group: true,

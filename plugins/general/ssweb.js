@@ -12,7 +12,7 @@ export default {
 
   async execute(sock, m, args) {
     const url = args.join(' ').trim() || m.quoted?.text?.trim();
-    if (!url) return m.reply('❌ Provide a URL.\nExample: `,ssweb https://google.com`');
+    if (!url) return m.reply('❌ Provide a URL.\nExample: `.ssweb https://google.com`');
     await m.react('⏳');
     try {
       const buf = await giftedGetBuffer('/api/tools/ssweb', { url }, 40_000);
@@ -22,7 +22,7 @@ export default {
       }, { quoted: m.raw });
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ Screenshot failed: ${err.message}`);
     }
   },

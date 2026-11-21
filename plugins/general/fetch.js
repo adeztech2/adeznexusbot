@@ -145,7 +145,7 @@ export default {
 
     } catch (err) {
       console.error('[fetch] error:', err.message);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Failed to fetch: ' + (err.message || 'Unknown error'));
     }
   },

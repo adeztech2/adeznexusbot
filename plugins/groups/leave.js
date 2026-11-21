@@ -2,7 +2,7 @@ export default {
   name: 'leave',
   aliases: ['left', 'exit'],
   description: 'Make bot leave the group',
-  usage: '!leave',
+  usage: 'leave',
   category: 'group',
   owner: true, // Only owner can make bot leave
   group: true,

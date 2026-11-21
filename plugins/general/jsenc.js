@@ -12,7 +12,7 @@ export default {
 
   async execute(sock, m, args) {
     const code = args.join(' ').trim() || await quotedDocText(m);
-    if (!code) return m.reply('❌ Provide JS code or reply to a JS file.\nExample: `,jsenc console.log("hi")`');
+    if (!code) return m.reply('❌ Provide JS code or reply to a JS file.\nExample: `.jsenc console.log("hi")`');
     await m.react('🔐');
     try {
       const data = await giftedGet('/api/tools/encryptv2', { code }, 30_000);
@@ -27,7 +27,7 @@ export default {
       }, { quoted: m.raw });
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ JS obfuscation failed: ${err.message}`);
     }
   },

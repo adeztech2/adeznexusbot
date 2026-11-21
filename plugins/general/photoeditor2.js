@@ -28,7 +28,7 @@ export default {
       }, { quoted: m.raw });
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ Photo edit v2 failed: ${err.message}`);
     }
   },

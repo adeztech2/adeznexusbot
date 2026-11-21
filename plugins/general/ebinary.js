@@ -10,7 +10,7 @@ export default {
   async execute(sock, m, args) {
     const text = args.join(' ') || m.quoted?.text;
     if (!text) return m.reply('❌ Provide text to encode.');
-    const bin = text.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+    const bin = [...Buffer.from(text, 'utf-8')].map(b => b.toString(2).padStart(8, '0')).join(' ');
     return m.reply(`📟 *Binary Encoded*\n\n${bin}\n\n${getFooter()}`);
   },
 }

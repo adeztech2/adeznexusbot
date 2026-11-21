@@ -82,11 +82,11 @@ export default {
       const type = getStickerType(buf);
 
       if (type === 'lottie') {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply('❌ Lottie/vector stickers cannot be converted to video.');
       }
       if (type === 'static-webp') {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply('❌ This is a static sticker. Use *.toimage* to get a picture instead.');
       }
 
@@ -99,7 +99,7 @@ export default {
       await m.react('✅');
     } catch (err) {
       console.error('[tovideo] error:', err.message);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Failed: ' + err.message);
     }
   },

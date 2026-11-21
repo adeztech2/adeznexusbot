@@ -2,7 +2,7 @@ export default {
   name: 'open',
   aliases: ['unlock', 'unmute'],
   description: 'Open group (all members can send messages)',
-  usage: '!open',
+  usage: 'open',
   category: 'group',
   owner: false,
   group: true,        

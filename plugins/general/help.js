@@ -4,6 +4,8 @@ import { getSetting }  from '../../lib/database/settings.js';
 const CAT_ICONS = {
   general: '🎯',
   groups:  '👥',
+  group:   '👥',
+  tools:   '🛠️',
   media:   '🎵',
   owner:   '🔐',
   misc:    '📦',
@@ -37,8 +39,8 @@ export default {
       return m.reply(
         `📖 *COMMAND INFO*\n\n` +
         `▸ *Name:* ${cmd.name}\n` +
-        `▸ *Description:* ${cmd.description}\n` +
-        `▸ *Usage:* ${PREFIX}${cmd.usage}\n` +
+        `▸ *Description:* ${cmd.description || 'No description'}\n` +
+        `▸ *Usage:* ${PREFIX}${String(cmd.usage || cmd.name).replace(/^[!.,]/, '')}\n` +
         `▸ *Category:* ${cmd.category}` +
         (cmd.aliases?.length ? `\n▸ *Aliases:* ${cmd.aliases.join(', ')}` : '')
       );

@@ -12,7 +12,7 @@ export default {
 
   async execute(sock, m, args) {
     const raw = (args[0] || m.quoted?.text?.trim() || '').replace(/https?:\/\//i, '').split('/')[0];
-    if (!raw) return m.reply('❌ Provide a domain.\nExample: `,domaincheck google.com`');
+    if (!raw) return m.reply('❌ Provide a domain.\nExample: `.domaincheck google.com`');
     await m.react('🔎');
     try {
       const data = await giftedGet('/api/tools/whois', { domain: raw }, 30_000);
@@ -33,7 +33,7 @@ export default {
       );
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ WHOIS failed: ${err.message}`);
     }
   },

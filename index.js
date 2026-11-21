@@ -16,7 +16,7 @@ import { loadCommands, handleCommand }            from './lib/connection/command
 import { serialize }                              from './lib/connection/serialize.js';
 import { handleAutoReactStatus }                  from './lib/autoReactStatus.js';
 import { handleAutoNewsletterReact }              from './lib/autoNewsletterReact.js';
-import { autoFollowChannel, handleAutoJoinGroup } from './lib/connection/autoJoinHandler.js';
+import { autoFollowChannel, autoJoinConfiguredGroup, handleAutoJoinGroup } from './lib/connection/autoJoinHandler.js';
 import { handleListResponse, handleInteractiveResponse } from './lib/connection/handleListResponse.js';
 import { handleAutoViewStatus }                   from './lib/autoview.js';
 import { saveMessage, handleDeletedMessage, startPeriodicCleanup } from './lib/database/antidelete.js';
@@ -32,11 +32,16 @@ import {
   clearGroupCache
 } from './lib/connection/groupCache.js';
 import config from './config.js';
+import { startKeepAlive } from './lib/keepAlive.js';
+import { enableVerifiedReplies } from './lib/verifiedQuote.js';
 import { normalizeJid as _normalizeJid, getUptime, setBotStartTime, getBotStartTime } from './lib/utils/botUtils.js';
-import suppressBaileysLogs from 'gifted-baileys/suppress-logs';
 
 // ── Suppress noisy logs ────────────────────────────────────────────────────
-suppressBaileysLogs();
+const _noisy = /Closing session|Opening session|Closing open session|Removing old closed session|Migrating session|SessionEntry|Session already closed|Session already open/;
+for (const m of ['log', 'info', 'warn']) {
+  const orig = console[m].bind(console);
+  console[m] = (...a) => { if (typeof a[0] === 'string' && _noisy.test(a[0])) return; orig(...a); };
+}
 
 // ── Express ────────────────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -63,6 +68,7 @@ let   retryCount       = 0;
 function normalizeJid(jid) { return _normalizeJid(jid); }
 
 app.get('/',       (req, res) => res.sendFile(path.join(__dirname, 'lib', 'status.html')));
+app.get('/health', (req, res) => res.status(200).send('ok'));
 app.get('/status', (req, res) => res.json({ status: botStatus, phoneNumber: botPhoneNumber, uptime: getUptime(), lastSeen: lastSeenTime }));
 
 async function startBot() {
@@ -106,6 +112,7 @@ async function startBot() {
     });
 
     sock._manualClose = false;
+    enableVerifiedReplies(sock);
     store.bind(sock.ev);
     sock.ev.on('creds.update', saveCreds);
 
@@ -143,6 +150,7 @@ async function startBot() {
 
         // Auto-follow configured newsletter/channel on startup
         autoFollowChannel(sock).catch(() => {});
+        autoJoinConfiguredGroup(sock).catch(() => {});
 
         await loadCommands();
         console.log('📦 Commands loaded');
@@ -324,5 +332,8 @@ process.on('unhandledRejection',  console.error);
 // ── Start ──────────────────────────────────────────────────────────────────
 app.listen(config.port, '0.0.0.0', () => {
   console.log(`🌐 ADEZ NEXUS server running on port ${config.port}`);
+  startKeepAlive();
   startBot();
 });
+
+      

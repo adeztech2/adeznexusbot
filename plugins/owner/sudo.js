@@ -53,7 +53,7 @@ export default {
     try {
       const [result] = await sock.onWhatsApp(target);
       if (!result?.exists) {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply(`❌ +${target} is not registered on WhatsApp.`);
       }
     } catch (err) {

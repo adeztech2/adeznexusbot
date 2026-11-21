@@ -36,7 +36,7 @@ export default {
       try {
         result = await waterfallDownload(video.url, VIDEO_ENDPOINTS, { timeout: 60000 });
       } catch {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply('❌ All download services unavailable. Try again later.');
       }
 
@@ -99,7 +99,7 @@ export default {
 
     } catch (error) {
       console.error('Video command error:', error);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Failed to search. Please try again later.');
     }
   },

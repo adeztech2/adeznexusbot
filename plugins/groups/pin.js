@@ -2,7 +2,7 @@ export default {
   name: 'pin',
   aliases: ['pinmsg'],
   description: 'Pin a message in the group',
-  usage: '!pin <duration>\n\n1 = 1 day\n2 = 7 days\n3 = 30 days',
+  usage: 'pin <duration>\n\n1 = 1 day\n2 = 7 days\n3 = 30 days',
   category: 'group',
   owner: false,
   group: true,

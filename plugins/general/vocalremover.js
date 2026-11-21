@@ -66,7 +66,7 @@ export default {
       setTimeout(() => sock.ev.off('messages.upsert', handle), 300_000);
 
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ Vocal removal failed: ${err.message}`);
     }
   },

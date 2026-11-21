@@ -7,11 +7,11 @@
     "start": "node index.js"
   },
   "engines": {
-    "node": ">=20.x",
+    "node": "20.x",
     "npm": ">=10.x"
   },
   "dependencies": {
-    "gifted-baileys": "github:mauricegift/baileys-new",
+    "gifted-baileys": "npm:@whiskeysockets/baileys@7.0.0-rc14",
     "axios": "^1.6.7",
     "better-sqlite3": "*",
     "express": "*",

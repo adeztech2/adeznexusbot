@@ -11,10 +11,12 @@ export default {
   usage:       'createpdf <filename> <text>  OR  reply to a message with: createpdf <filename>',
 
   async execute(sock, m, args) {
-    const pdfName = args[0] || 'document';
-    const content = args.slice(1).join(' ').trim() || m.quoted?.text?.trim();
+    const raw     = args.join(' ').trim();
+    const first   = raw.split(/\s+/)[0] || '';
+    const pdfName = (first || 'document').replace(/[\\/:*?"<>|]/g, '_');
+    const content = raw.slice(first.length).trim() || m.quoted?.text?.trim();
     if (!content) return m.reply(
-      '❌ Provide content.\n`,createpdf myfile Some text`\nor reply to a text message with `,createpdf myfile`'
+      '❌ Provide content.\n`.createpdf myfile Some text`\nor reply to a text message with `.createpdf myfile`'
     );
     await m.react('⏳');
     try {
@@ -28,7 +30,7 @@ export default {
       }, { quoted: m.raw });
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ PDF creation failed: ${err.message}`);
     }
   },

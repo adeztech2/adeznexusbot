@@ -2,7 +2,7 @@ export default {
   name: 'revoke',
   aliases: ['reset', 'newlink'],
   description: 'Revoke group invite link',
-  usage: '!revoke',
+  usage: 'revoke',
   category: 'group',
   owner: false,
   group: true,

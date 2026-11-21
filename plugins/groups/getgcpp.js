@@ -5,7 +5,7 @@ const PLACEHOLDER = 'https://telegra.ph/file/9521e9ee2fdbd0d6f4f1c.jpg';
 
 export default {
   name:        'getgcpp',
-  aliases:     ['gcpp', 'grouppic', 'groupicon', 'grouppp'],
+  aliases:     ['gcpp', 'grouppic', 'groupicon'],
   description: 'Get the current group profile picture',
   usage:       '.getgcpp',
   category:    'group',

@@ -154,7 +154,7 @@ export default {
               } catch {}
             }
           }
-          await m.react('❌');
+          await m.react('❌'); m._failed = true;
           return m.reply(`❌ Upload to ${SERVICES[directService].label} failed: ${err.message}`);
         }
       }
@@ -200,14 +200,14 @@ export default {
           }
         }
         if (!uploaded) {
-          await m.react('❌');
+          await m.react('❌'); m._failed = true;
           return m.reply(`❌ All upload services failed:\n${errors.join('\n')}`);
         }
       }
 
     } catch (err) {
       console.error('[upload] error:', err.message);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ Upload failed: ${err.message}`);
     }
   },

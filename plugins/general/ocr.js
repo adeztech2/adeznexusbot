@@ -54,7 +54,7 @@ export default {
       }
 
       if (!imageBuffer) {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply(
           `❌ *No image found.*\n\n` +
           `*How to use:*\n` +
@@ -69,7 +69,7 @@ export default {
       const result = await extractTextFromImage(imageBuffer, mimeHint);
 
       if (!result?.trim()) {
-        await m.react('❌');
+        await m.react('❌'); m._failed = true;
         return m.reply('❌ No text found in the image.');
       }
 
@@ -90,7 +90,7 @@ export default {
       });
 
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       console.error('[OCR] error:', err.message);
       return m.reply('❌ OCR failed: ' + err.message);
     }

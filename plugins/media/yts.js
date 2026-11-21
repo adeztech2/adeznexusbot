@@ -125,7 +125,7 @@ export default {
 
     } catch (error) {
       console.error('YTS command error:', error);
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Failed to search. Please try again later.');
     }
   },

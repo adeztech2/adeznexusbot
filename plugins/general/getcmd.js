@@ -23,12 +23,12 @@ export default {
 
   async execute(sock, m, args) {
     const input = (args[0] || '').toLowerCase().trim();
-    if (!input) return m.reply(`❌ Provide a command name.\nExample: \`,getcmd tiktok\``);
+    if (!input) return m.reply(`❌ Provide a command name.\nExample: \`.getcmd tiktok\``);
 
     const commands = await getCommandsMap();
     const command  = commands.get(input);
 
-    if (!command) return m.reply(`❌ No command found for *${input}*.\nUse \`,help\` to see all commands.`);
+    if (!command) return m.reply(`❌ No command found for *${input}*.\nUse \`.help\` to see all commands.`);
 
     // Always use the canonical name (not the alias the user typed)
     const canonicalName = command.name;

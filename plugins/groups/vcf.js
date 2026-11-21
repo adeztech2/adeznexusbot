@@ -34,7 +34,7 @@ export default {
     }
 
     if (!count) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply('❌ Could not extract any valid contacts from this group.');
     }
 

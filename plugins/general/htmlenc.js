@@ -12,7 +12,7 @@ export default {
 
   async execute(sock, m, args) {
     const html = args.join(' ').trim() || await quotedDocText(m);
-    if (!html) return m.reply('❌ Provide HTML code or reply to an HTML file.\nExample: `,htmlenc <h1>Hello</h1>`');
+    if (!html) return m.reply('❌ Provide HTML code or reply to an HTML file.\nExample: `.htmlenc <h1>Hello</h1>`');
     await m.react('🔐');
     try {
       const data = await giftedGet('/api/tools/htmlobfuscate', { html }, 30_000);
@@ -27,7 +27,7 @@ export default {
       }, { quoted: m.raw });
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ HTML obfuscation failed: ${err.message}`);
     }
   },

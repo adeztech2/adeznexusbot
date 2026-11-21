@@ -25,6 +25,8 @@ const KEY_MAP = {
   autojoingroup:      'autoJoinGroup',
   autofollowchannel:  'autoFollowChannel',
   newsletterjid:      'newsletterJid',
+  channelurl:         'channelUrl',
+  groupurl:           'groupUrl',
   newsletterreact:    'newsletterReact',
   newsletteremojis:   'newsletterEmojis',
 };
@@ -80,6 +82,8 @@ function formatSettings() {
     `▸ autoJoinGroup: ${displayBool('autoJoinGroup')}\n` +
     `▸ autoFollowChannel: ${displayBool('autoFollowChannel')}\n` +
     `▸ newsletterJid: ${s.newsletterJid || '—'}\n` +
+    `▸ channelUrl: ${s.channelUrl || '—'}\n` +
+    `▸ groupUrl: ${s.groupUrl || '—'}\n` +
     `▸ newsletterReact: ${displayBool('newsletterReact')}\n` +
     `▸ newsletterEmojis: ${s.newsletterEmojis || '—'}\n\n` +
 

@@ -4,7 +4,7 @@ export default {
   name:        'demote',
   aliases:     [],
   description: 'Demote admin to member',
-  usage:       '!demote @user  |  reply to message  |  !demote 254711111111',
+  usage:       'demote @user  |  reply to message  |  demote 254711111111',
   category:    'group',
   owner:       false,
   group:       true,

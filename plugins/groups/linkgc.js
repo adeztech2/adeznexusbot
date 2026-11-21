@@ -2,7 +2,7 @@ export default {
   name: 'link',
   aliases: ['grouplink', 'invite', 'linkgc'],
   description: 'Get group invite link',
-  usage: '!link',
+  usage: 'link',
   category: 'group',
   owner: false,
   group: true,

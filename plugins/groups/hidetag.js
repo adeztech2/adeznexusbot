@@ -2,7 +2,7 @@ export default {
   name: 'hidetag',
   aliases: ['htag'],
   description: 'Silently mention all members (supports quoted messages)',
-  usage: '!hidetag <text> OR reply + !hidetag',
+  usage: 'hidetag <text> OR reply + hidetag',
   category: 'group',
   owner: false,
   group: true,

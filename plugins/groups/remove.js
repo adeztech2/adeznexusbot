@@ -4,7 +4,7 @@ export default {
   name:        'remove',
   aliases:     ['kick', 'k'],
   description: 'Remove member from group',
-  usage:       '!remove @user  |  reply to message  |  !remove 254711111111',
+  usage:       'remove @user  |  reply to message  |  remove 254711111111',
   category:    'group',
   owner:       false,
   group:       true,

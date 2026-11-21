@@ -19,8 +19,8 @@ export default {
       imageUrl = await quotedImageUrl(m);
       prompt   = args.join(' ');
     }
-    if (!imageUrl) return m.reply('❌ Reply to an image or provide an image URL.\nExample: `,photoeditor make it a painting`');
-    if (!prompt)   return m.reply('❌ Provide a prompt describing the edit.\nExample: `,photoeditor make it a cartoon`');
+    if (!imageUrl) return m.reply('❌ Reply to an image or provide an image URL.\nExample: `.photoeditor make it a painting`');
+    if (!prompt)   return m.reply('❌ Provide a prompt describing the edit.\nExample: `.photoeditor make it a cartoon`');
     await m.react('🎨');
     try {
       const data = await giftedGetRetry('/api/tools/photoeditor', { url: imageUrl, prompt }, 60_000);
@@ -33,7 +33,7 @@ export default {
       }, { quoted: m.raw });
       await m.react('✅');
     } catch (err) {
-      await m.react('❌');
+      await m.react('❌'); m._failed = true;
       return m.reply(`❌ Photo edit failed: ${err.message}`);
     }
   },
