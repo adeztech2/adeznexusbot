@@ -1,9 +1,35 @@
-import { giftedGet } from '../../lib/api/gifted.js';
+import { giftedGetRetry } from '../../lib/api/gifted.js';
 import { sendBtnOrText, extractButtonId, getFooter } from '../../lib/buttonHandler.js';
 import { isEnabled } from '../../lib/database/settings.js';
 
 
 function isUrl(s) { try { new URL(s); return true; } catch { return false; } }
+
+const FB_RE = /https?:\/\/(?:[\w-]+\.)?(?:facebook\.com|fb\.watch|fb\.com|fb\.me)\/\S+/i;
+
+// Find a Facebook link anywhere in the command text or the replied-to message.
+function findFbUrl(args, m) {
+  const text = `${args.join(' ')} ${m.quoted?.text || ''}`;
+  return text.match(FB_RE)?.[0]?.replace(/[)\]>.,]+$/, '') || null;
+}
+
+// The API's field names vary a little between responses.
+function pickVideos(r = {}) {
+  const hd = r.hd_video || r.hd || r.HD || r.video_hd || null;
+  const sd = r.sd_video || r.sd || r.SD || r.video_sd || r.download_url || r.url || r.video || null;
+  return { hd, sd };
+}
+
+async function sendVideo(sock, m, videoUrl, caption, quoted) {
+  try {
+    await sock.sendMessage(m.from, { video: { url: videoUrl }, mimetype: 'video/mp4', caption }, { quoted });
+  } catch (err) {
+    // Too big or rejected as a video — send as a file instead of failing
+    console.error('[fb] video send failed, sending as document:', err.message);
+    await sock.sendMessage(m.from, { document: { url: videoUrl }, mimetype: 'video/mp4', fileName: 'facebook-video.mp4', caption }, { quoted });
+  }
+}
+
 export default {
   category: 'downloader', owner: false, group: false, private: false,
   name:        'fb',
@@ -12,27 +38,23 @@ export default {
   usage:       'fb <facebook url>',
 
   async execute(sock, m, args) {
-    const url = args[0] || m.quoted?.text?.trim();
-    if (!url || !isUrl(url)) return m.reply('❌ Provide a valid Facebook video URL.');
-    if (!url.includes('facebook.com') && !url.includes('fb.watch'))
-      return m.reply('❌ That does not look like a Facebook URL.');
+    const url = findFbUrl(args, m);
+    if (!url || !isUrl(url))
+      return m.reply('❌ Send a Facebook video link.\n\nExample: `.fb https://www.facebook.com/watch?v=...`\nYou can also reply to a message that has the link.');
     await m.react('⬇️');
     try {
-      const data = await giftedGet('/api/download/facebook', { url }, 60_000);
+      const data = await giftedGetRetry('/api/download/facebook', { url }, 60_000, 3, 3_000);
       if (!data?.success || !data?.result)
-        throw new Error('Could not fetch video info. Check the URL.');
+        throw new Error('Could not fetch the video. It may be private, or the link is wrong.');
 
-      const { title, duration, thumbnail, hd_video, sd_video } = data.result;
-      const hdUrl = hd_video, sdUrl = sd_video;
-      if (!hdUrl && !sdUrl) throw new Error('No video URLs found.');
+      const { title, duration, thumbnail } = data.result;
+      const { hd: hdUrl, sd: sdUrl } = pickVideos(data.result);
+      if (!hdUrl && !sdUrl) throw new Error('No video URLs found. The video may be private.');
 
       if (!isEnabled('useButtons')) {
         const videoUrl = hdUrl || sdUrl;
-        await sock.sendMessage(m.from, {
-          video:    { url: videoUrl },
-          mimetype: 'video/mp4',
-          caption:  `📘 *${title || 'Facebook Video'}*\n⏱️ ${duration || ''}\n\n${getFooter()}`,
-        }, { quoted: m.raw });
+        await sendVideo(sock, m, videoUrl,
+          `📘 *${title || 'Facebook Video'}*\n⏱️ ${duration || ''}\n\n${getFooter()}`, m.raw);
         return m.react('✅');
       }
 
@@ -56,11 +78,7 @@ export default {
         if (!sid || md.key?.remoteJid !== m.from || !sid.includes(ts.toString())) return;
         const videoUrl = sid.includes('_hd_') ? hdUrl : sdUrl;
         try {
-          await sock.sendMessage(m.from, {
-            video:    { url: videoUrl },
-            mimetype: 'video/mp4',
-            caption:  `📘 *${title || 'Facebook Video'}*\n\n${getFooter()}`,
-          }, { quoted: md });
+          await sendVideo(sock, m, videoUrl, `📘 *${title || 'Facebook Video'}*\n\n${getFooter()}`, md);
           await m.react('✅');
         } catch (err) {
           await sock.sendMessage(m.from, { text: `❌ ${err.message}` }, { quoted: md });
