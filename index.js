@@ -35,6 +35,7 @@ import {
 import { antiEditHandler } from './lib/database/antiedit.js';
 import { handleAntiLink, handleParticipantsUpdate } from './lib/groupGuard.js';
 import { sendPresence } from './lib/connection/presenceHandler.js';
+import { handleChatbot } from './lib/chatbot.js';
 import { initDb } from './lib/database/db.js';
 import {
   loadSession,
@@ -447,6 +448,10 @@ async function startBot() {
           console.error('Command error:', err.message);
         });
 
+        handleChatbot(sock, msg).catch(err => {
+          console.error('Chatbot error:', err.message);
+        });
+
       } catch (err) {
         console.error('Message handler error:', err.message);
       }
@@ -500,4 +505,5 @@ app.listen(config.port, '0.0.0.0', () => {
   startKeepAlive();
   startBot();
 });
-          
+
+                                            
