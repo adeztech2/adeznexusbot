@@ -56,6 +56,9 @@
 | `DATABASE_URL` | PostgreSQL URL. Heroku fills it in with the Postgres add-on. Without it, settings use local SQLite and are lost on restart |
 | `APP_URL` | Public URL of your app, for keep-alive. Required on Heroku, automatic on Render |
 | `KEEP_ALIVE_MINUTES` | Ping interval, default `4` |
+| `HEROKU_API_KEY` | Optional. Lets `.update` redeploy on Heroku |
+| `DEPLOY_HOOK_URL` | Optional. Lets `.update` redeploy on Render |
+| `GITHUB_REPO`, `GITHUB_TOKEN` | Optional. For `.update` when you deployed from a fork |
 | `API_KEYS` | Gemini API keys, comma separated (for AI) |
 | `PORT` | Set by the host, default `3237` |
 
@@ -69,14 +72,37 @@ Click **Deploy to Render**, or use **New → Blueprint** with your fork. Fill in
 
 ### Heroku
 
-Click **Deploy to Heroku**, set `APP_URL` to `https://<your-app>.herokuapp.com`. Or:
+**One click:** press **Deploy to Heroku**, then fill in:
+
+| Field | Value |
+| --- | --- |
+| App name | Pick a name, for example `my-nexus-bot` |
+| `SESSION_ID` | Your session ID (`ADEZ~...`) |
+| `OWNER_NUMBER` | Your number with country code, digits only |
+| `APP_URL` | `https://my-nexus-bot.herokuapp.com` (your app name above) |
+
+The Postgres add-on is added for you and fills in `DATABASE_URL` by itself.
+When the build finishes, open the app's **Resources** tab and make sure the **web** dyno is ON, then send `.menu` to the bot.
+
+**From the command line:**
 
 ```bash
-heroku create your-app-name
+heroku create my-nexus-bot
 heroku addons:create heroku-postgresql:essential-0
-heroku config:set SESSION_ID=ADEZ~... OWNER_NUMBER=254... APP_URL=https://your-app-name.herokuapp.com
+heroku config:set SESSION_ID=ADEZ~... OWNER_NUMBER=254... APP_URL=https://my-nexus-bot.herokuapp.com
 git push heroku main
+heroku ps:scale web=1
 ```
+
+**Notes**
+
+- Heroku has no permanent disk. The bot gets its login from `SESSION_ID` each time it starts, and keeps settings in Postgres. Heroku restarts the dyno about once a day, so a "Bad MAC" line in the logs after a restart is normal.
+- Eco dynos sleep when idle. The keep-alive ping cannot wake a sleeping dyno, so use a **Basic** dyno or bigger for a bot that must always answer.
+- `.restart` works on Heroku (the dyno starts again by itself).
+- `.update` and `.checkupdate` on Heroku:
+  1. Run `heroku labs:enable runtime-dyno-metadata -a my-nexus-bot` so the bot knows which version it runs.
+  2. Add `HEROKU_API_KEY` (from `heroku authorizations:create`). Add `HEROKU_APP_NAME` only if you use a custom domain.
+  3. Deployed from a fork? Add `GITHUB_REPO` (`yourname/baileys`) and `GITHUB_TOKEN` so `.update` can pull the newest code into your fork. The repo must be public.
 
 ### Local
 

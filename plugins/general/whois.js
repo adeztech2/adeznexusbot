@@ -2,6 +2,7 @@ import { lidToJid } from '../../lib/connection/helper.js';
 import { DEV_NUMBERS, getSudoNumbers } from '../../lib/database/sudo.js';
 import { getSetting } from '../../lib/database/settings.js';
 import { getFooter } from '../../lib/buttonHandler.js';
+import { getForwardFields } from '../../lib/forwardContext.js';
 
 const PLACEHOLDER = 'https://telegra.ph/file/9521e9ee2fdbd0d6f4f1c.jpg';
 
@@ -112,8 +113,6 @@ export default {
     const displayNum    = phone || rawJid.split('@')[0];
     const targetJid     = jid || rawJid;
 
-    const newsletterJid = getSetting('newsletterJid') || '';
-    const botName       = getSetting('botName') || 'ADEZ NEXUS';
     const botFooter     = getSetting('botFooter') || 'ADEZ NEXUS';
 
     const lines = [
@@ -136,13 +135,7 @@ export default {
       mentions: jid ? [jid] : [],
       contextInfo: {
         mentionedJid: jid ? [jid] : [],
-        forwardingScore: 5,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid,
-          newsletterName: botName,
-          serverMessageId: 143,
-        },
+        ...getForwardFields(5, 143),
       },
     }, { quoted: m.raw });
 

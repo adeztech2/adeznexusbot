@@ -1,6 +1,7 @@
 import { getSetting } from '../../lib/database/settings.js';
 import { lidToJid } from '../../lib/connection/helper.js';
 import { getFooter } from '../../lib/buttonHandler.js';
+import { getForwardFields } from '../../lib/forwardContext.js';
 
 const PLACEHOLDER = 'https://telegra.ph/file/9521e9ee2fdbd0d6f4f1c.jpg';
 
@@ -51,8 +52,6 @@ export default {
     } catch { /* use placeholder */ }
 
     const number      = targetJid.replace(/@s\.whatsapp\.net$/, '').split(':')[0];
-    const newsletterJid = getSetting('newsletterJid') || '';
-    const botName       = getSetting('botName') || 'ADEZ NEXUS';
 
     await sock.sendMessage(m.from, {
       image:   { url: ppUrl },
@@ -60,13 +59,7 @@ export default {
       mentions: [targetJid],
       contextInfo: {
         mentionedJid: [targetJid],
-        forwardingScore: 5,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid,
-          newsletterName: botName,
-          serverMessageId: 143,
-        },
+        ...getForwardFields(5, 143),
       },
     }, { quoted: m.raw });
 

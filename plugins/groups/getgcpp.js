@@ -1,5 +1,6 @@
 import { getSetting } from '../../lib/database/settings.js';
 import { getFooter } from '../../lib/buttonHandler.js';
+import { getForwardFields } from '../../lib/forwardContext.js';
 
 const PLACEHOLDER = 'https://telegra.ph/file/9521e9ee2fdbd0d6f4f1c.jpg';
 
@@ -23,20 +24,12 @@ export default {
 
     const meta          = await sock.groupMetadata(m.from).catch(() => null);
     const groupName     = meta?.subject || 'Group';
-    const newsletterJid = getSetting('newsletterJid') || '';
-    const botName       = getSetting('botName') || 'ADEZ NEXUS';
 
     await sock.sendMessage(m.from, {
       image:   { url: ppUrl },
       caption: `*📸 Group Profile Picture*\n\n*• Group:* ${groupName}\n\n${getFooter()}`,
       contextInfo: {
-        forwardingScore: 5,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid,
-          newsletterName: botName,
-          serverMessageId: 143,
-        },
+        ...getForwardFields(5, 143),
       },
     }, { quoted: m.raw });
 

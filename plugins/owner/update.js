@@ -24,6 +24,14 @@ const currentCommit = () =>
   process.env.RENDER_GIT_COMMIT || process.env.HEROKU_SLUG_COMMIT ||
   process.env.SOURCE_VERSION    || process.env.VERCEL_GIT_COMMIT_SHA || '';
 
+// Heroku app name: HEROKU_APP_NAME (dyno metadata) or taken from APP_URL.
+function herokuApp() {
+  const n = (process.env.HEROKU_APP_NAME || '').trim();
+  if (n) return n;
+  const m = (process.env.APP_URL || '').match(/^https?:\/\/([a-z0-9-]+)\.herokuapp\.com/i);
+  return m ? m[1] : '';
+}
+
 const short = (sha) => (sha ? sha.slice(0, 7) : 'unknown');
 
 async function checkUpdate() {
@@ -143,22 +151,53 @@ const update = {
     }
 
     // 2) Ask the host to rebuild and redeploy.
+    let deployStarted = false;
+
+    //    Render (or any host with a deploy hook URL)
     const hook = (process.env.DEPLOY_HOOK_URL || process.env.RENDER_DEPLOY_HOOK || '').trim();
     if (hook) {
       try {
         await axios.get(hook, { timeout: 15000 });
         steps.push('✅ Redeploy started — the bot will restart in a minute or two.');
-        didSomething = true;
+        deployStarted = didSomething = true;
       } catch (err) {
         steps.push(`❌ Redeploy request failed: ${err.message}`);
       }
     }
 
-    if (!hook) {
+    //    Heroku: build the newest code of the repo through the Platform API
+    const herokuKey = (process.env.HEROKU_API_KEY || '').trim();
+    const hApp = herokuApp();
+    if (!deployStarted && herokuKey && hApp) {
+      const repo = deployedRepo || upstream();
+      try {
+        let version;
+        try { version = (await gh.get(`/repos/${repo}/commits/${branch()}`)).data.sha; } catch {}
+        await axios.post(
+          `https://api.heroku.com/apps/${hApp}/builds`,
+          { source_blob: { url: `https://github.com/${repo}/tarball/${branch()}`, ...(version ? { version } : {}) } },
+          {
+            timeout: 20000,
+            headers: {
+              Accept: 'application/vnd.heroku+json; version=3',
+              Authorization: `Bearer ${herokuKey}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        steps.push('✅ Heroku build started — the bot will restart in a few minutes.');
+        deployStarted = didSomething = true;
+      } catch (err) {
+        const why = err.response?.data?.message || err.message;
+        steps.push(`❌ Heroku build failed: ${why}`);
+      }
+    }
+
+    if (!deployStarted) {
       steps.push(
         didSomething
           ? 'ℹ️ If auto-deploy is on in your host, it will redeploy by itself shortly.'
-          : '⚠️ I cannot redeploy from here yet. Add the *DEPLOY_HOOK_URL* variable (Render → Settings → Deploy Hook), and for a fork also *GITHUB_REPO* (yourname/baileys) with *GITHUB_TOKEN*.'
+          : '⚠️ I cannot redeploy from here yet.\n• Render: add *DEPLOY_HOOK_URL* (Settings → Deploy Hook).\n• Heroku: add *HEROKU_API_KEY* (and *HEROKU_APP_NAME* if you use a custom domain).\n• Fork? Also add *GITHUB_REPO* (yourname/baileys) and *GITHUB_TOKEN*.'
       );
     }
 

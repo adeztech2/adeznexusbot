@@ -17,7 +17,7 @@ services:
       - key: OWNER_NUMBER
         sync: false
       - key: DATABASE_URL
-        sync: false   postgresql://postgres.utzjmucidbuplbozqkkz:sb_publishable_AYlfwww63_UeFm9XtcvHCw_T_p22xtk@aws-1-eu-west-1.pooler.supabase.com:5432/postgres
+        sync: false
       - key: API_KEYS
         sync: false
       - key: MP3_API_URL

@@ -1,4 +1,5 @@
 import { getSetting } from '../../lib/database/settings.js';
+import { getForwardFields } from '../../lib/forwardContext.js';
 
 export default {
   name:        'mention',
@@ -24,8 +25,6 @@ export default {
       .filter(Boolean);
 
     const subject       = args.join(' ') || meta.subject || 'everyone';
-    const newsletterJid = getSetting('newsletterJid') || '';
-    const botName       = getSetting('botName') || 'ADEZ NEXUS';
 
     await sock.sendMessage(m.from, {
       text: `@${m.from}`,
@@ -35,13 +34,7 @@ export default {
           groupJid:     m.from,
           groupSubject: subject,
         }],
-        forwardingScore: 1,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid,
-          newsletterName: botName,
-          serverMessageId: 0,
-        },
+        ...getForwardFields(1, 0),
       },
     }, { quoted: m.raw });
 

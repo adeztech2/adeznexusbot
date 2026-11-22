@@ -10,12 +10,37 @@
   },
   "addons": [{ "plan": "heroku-postgresql:essential-0" }],
   "env": {
-    "SESSION_ID": { "description": "Your WhatsApp session ID", "required": true },
-    "OWNER_NUMBER": { "description": "Owner number with country code, no +", "value": "254101579396" },
-    "APP_URL": { "description": "Your app URL for keep-alive, e.g. https://your-app-name.herokuapp.com", "required": true },
-    "API_KEYS": { "description": "Gemini API keys, comma separated", "required": false },
+    "SESSION_ID": {
+      "description": "Your WhatsApp session ID (starts with ADEZ~)",
+      "required": true
+    },
+    "OWNER_NUMBER": {
+      "description": "Your WhatsApp number with country code, digits only (no +)",
+      "required": true
+    },
+    "APP_URL": {
+      "description": "Your app URL for keep-alive: https://YOUR-APP-NAME.herokuapp.com (use the same app name you typed above)",
+      "required": true
+    },
+    "API_KEYS": {
+      "description": "Gemini API keys for the AI commands, comma separated (optional)",
+      "required": false
+    },
+    "HEROKU_API_KEY": {
+      "description": "Optional. Lets the .update command redeploy the bot. Get it with: heroku authorizations:create",
+      "required": false
+    },
+    "GITHUB_REPO": {
+      "description": "Optional. Only if you deployed from your own fork, e.g. yourname/baileys. Used by .update",
+      "required": false
+    },
+    "GITHUB_TOKEN": {
+      "description": "Optional. GitHub token so .update can sync your fork",
+      "required": false
+    },
     "GIFTED_TECH_API": { "value": "https://api.gifted.co.ke" },
     "GIFTED_API_KEY": { "value": "gifted" },
+    "MP3_API_URL": { "value": "https://mcow.gifted.co.ke" },
     "KEEP_ALIVE_MINUTES": { "value": "4" }
   }
 }
