@@ -36,6 +36,7 @@ import { antiEditHandler } from './lib/database/antiedit.js';
 import { handleAntiLink, handleParticipantsUpdate } from './lib/groupGuard.js';
 import { sendPresence } from './lib/connection/presenceHandler.js';
 import { handleChatbot } from './lib/chatbot.js';
+import { sendButtons, getFooter } from './lib/buttonHandler.js';
 import { initDb } from './lib/database/db.js';
 import {
   loadSession,
@@ -254,31 +255,73 @@ async function startBot() {
 
               const selfJid = normalizeJid(sock.user.id);
 
-              const ownerName =
-                getSetting('ownerName') || 'Owner';
+              // ── Connected alert design — edit this block to restyle it ──
+              const prefix    = getSetting('prefix') || '.';
+              const botName   = getSetting('botName') || 'ADEZ NEXUS';
+              const ownerName = getSetting('ownerName') || 'Owner';
+              const mode      = getSetting('mode') === 'public' ? 'Public' : 'Private';
+              const host      = process.env.HOST_PLATFORM || 'ADEZ HOST';
 
-              const ownerNum =
-                getSetting('ownerNumber') || '';
+              let time = '';
+              try {
+                time = new Date().toLocaleString('en-GB', {
+                  timeZone: getSetting('timezone') || 'Africa/Nairobi'
+                });
+              } catch {
+                time = new Date().toISOString();
+              }
 
-              const hostPlatform =
-                process.env.HOST_PLATFORM || 'ADEZ HOST';
+              const text =
+                `✅ *Bot is connected and ready*\n\n` +
+                `▸ *Bot:* ${botName}\n` +
+                `▸ *Status:* 🟢 Online\n` +
+                `▸ *Number:* ${botPhoneNumber}\n` +
+                `▸ *Owner:* ${ownerName}\n` +
+                `▸ *Prefix:* ${prefix}\n` +
+                `▸ *Mode:* ${mode}\n` +
+                `▸ *Host:* ${host}\n` +
+                `▸ *Time:* ${time}`;
 
-              const alert =
-                `*ADEZ NEXUS CONNECTED*\n\n` +
-                '```' +
-                `┌─────────\n` +
-                `│ BOT      : ADEZ NEXUS\n` +
-                `│ STATUS   : ONLINE\n` +
-                `│ HOST     : ${hostPlatform}\n` +
-                `│ OWNER    : ${ownerName}\n` +
-                `│ NUMBER   : ${ownerNum}\n` +
-                `└─────────` +
-                '```' +
-                `\n\nHost your bot here:\nhttps://adezhost.zone.id`;
+              const buttons = [
+                { id: `${prefix}menu`, text: '📜 Menu' },
+                { id: `${prefix}ping`, text: '⚡ Ping' }
+              ];
 
-              await sock.sendMessage(selfJid, {
-                text: alert
-              });
+              const channelUrl = getSetting('channelUrl');
+              const groupUrl   = getSetting('groupUrl');
+
+              if (channelUrl) {
+                buttons.push({
+                  name: 'cta_url',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: '📢 Channel',
+                    url: channelUrl
+                  })
+                });
+              }
+
+              if (groupUrl) {
+                buttons.push({
+                  name: 'cta_url',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: '👥 Support Group',
+                    url: groupUrl
+                  })
+                });
+              }
+
+              try {
+                await sendButtons(sock, selfJid, {
+                  title: `${botName} CONNECTED`,
+                  text,
+                  footer: getFooter(),
+                  buttons
+                });
+              } catch (btnErr) {
+                // Buttons can fail (rate limits / unsupported client) — fall back to plain text
+                console.error('Connected alert buttons failed, sending text:', btnErr.message);
+                await sock.sendMessage(selfJid, { text: `*${botName} CONNECTED*\n\n${text}` });
+              }
 
             } catch (err) {
               console.error(
@@ -506,4 +549,4 @@ app.listen(config.port, '0.0.0.0', () => {
   startBot();
 });
 
-                                            
+      
