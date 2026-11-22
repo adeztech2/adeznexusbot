@@ -31,7 +31,7 @@ export default {
   name:        'whois',
   aliases:     ['profile', 'who', 'userinfo'],
   description: 'Get full profile details of a user',
-  usage:       '.whois (reply / @mention / number)',
+  usage:       'whois (reply / @mention / number)',
   category:    'general',
   owner:       false,
   admin:       false,

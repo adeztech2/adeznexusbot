@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { safeGet } from '../../lib/utils/safeUrl.js';
 import { extractTextFromImage } from '../../lib/utils/ocr.js';
 import { sendBtnOrText, getFooter } from '../../lib/buttonHandler.js';
 
@@ -38,7 +38,7 @@ export default {
       } else if (m.quoted?.text) {
         const url = findImageUrl(m.quoted.text);
         if (url) {
-          const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 30_000 });
+          const res = await safeGet(url, { responseType: 'arraybuffer', timeout: 30_000, maxContentLength: 15 * 1024 * 1024 });
           imageBuffer = Buffer.from(res.data);
           mimeHint    = url;
         }
@@ -47,7 +47,7 @@ export default {
       } else {
         const url = args.find(a => /^https?:\/\//i.test(a));
         if (url) {
-          const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 30_000 });
+          const res = await safeGet(url, { responseType: 'arraybuffer', timeout: 30_000, maxContentLength: 15 * 1024 * 1024 });
           imageBuffer = Buffer.from(res.data);
           mimeHint    = url;
         }

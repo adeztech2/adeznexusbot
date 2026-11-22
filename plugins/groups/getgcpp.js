@@ -7,7 +7,7 @@ export default {
   name:        'getgcpp',
   aliases:     ['gcpp', 'grouppic', 'groupicon'],
   description: 'Get the current group profile picture',
-  usage:       '.getgcpp',
+  usage:       'getgcpp',
   category:    'group',
   owner:       false,
   group:       true,

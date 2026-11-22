@@ -6,7 +6,7 @@ export default {
   name:        'gpp',
   aliases:     ['setgcpp', 'setgrouppp', 'grouppp', 'gcicon'],
   description: 'Set group profile picture / icon',
-  usage:       '.gpp (reply to image, or send image with .gpp as caption)',
+  usage:       'gpp (reply to image, or send image with gpp as caption)',
   category:    'group',
   owner:       false,
   group:       true,

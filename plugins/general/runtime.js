@@ -30,7 +30,7 @@ export default {
           name: 'cta_url',
           buttonParamsJson: JSON.stringify({
             display_text: '🌐 GitHub',
-            url: 'https://github.com/mauricegift/parapanda-md',
+            url: getSetting('repoUrl') || 'https://github.com/adeztech2/baileys',
           }),
         },
       ],

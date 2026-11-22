@@ -12,13 +12,23 @@ export default {
   private: false,
 
   async execute(sock, m, args) {
-    const start = process.hrtime();
     const prefix = getSetting('prefix') || '.';
 
-    await new Promise(r => setTimeout(r, Math.floor(80 + Math.random() * 420)));
-
-    const elapsed = process.hrtime(start);
-    const latency = Math.floor(elapsed[0] * 1000 + elapsed[1] / 1_000_000);
+    // Real latency: round trip to WhatsApp's servers (same ping Baileys uses
+    // for its keep-alive). Falls back to the message's own age if that fails.
+    let latency;
+    try {
+      const t0 = Date.now();
+      await sock.query({
+        tag: 'iq',
+        attrs: { to: '@s.whatsapp.net', type: 'get', xmlns: 'w:p' },
+        content: [{ tag: 'ping', attrs: {} }],
+      });
+      latency = Date.now() - t0;
+    } catch {
+      const sentAt = Number(m.raw?.messageTimestamp || 0) * 1000;
+      latency = sentAt ? Math.max(0, Date.now() - sentAt) : 0;
+    }
 
     await sendBtnOrText(sock, m.from, {
       title: 'Bot Speed',
@@ -30,7 +40,7 @@ export default {
           name: 'cta_url',
           buttonParamsJson: JSON.stringify({
             display_text: '🌐 GitHub',
-            url: 'https://github.com/mauricegift/parapanda-md',
+            url: getSetting('repoUrl') || 'https://github.com/adeztech2/baileys',
           }),
         },
       ],

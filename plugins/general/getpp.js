@@ -8,7 +8,7 @@ export default {
   name:        'getpp',
   aliases:     ['stealpp', 'snatchpp', 'profilepic'],
   description: 'Get profile picture of a user',
-  usage:       '.getpp @user / reply to message / .getpp 254712345678',
+  usage:       'getpp @user / reply to message / getpp 254712345678',
   category:    'general',
   owner:       false,
   group:       false,
@@ -34,7 +34,7 @@ export default {
     if (!targetJid || targetJid.endsWith('@g.us')) {
       return m.reply(
         '❌ Reply to a message, @mention a user, or provide a number.\n\n' +
-        'Examples:\n• .getpp @user\n• .getpp 254712345678\n• Reply to a message + .getpp'
+        `Examples:\n• ${getSetting('prefix') || '.'}getpp @user\n• ${getSetting('prefix') || '.'}getpp 254712345678\n• Reply to a message + ${getSetting('prefix') || '.'}getpp`
       );
     }
 

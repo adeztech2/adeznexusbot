@@ -7,7 +7,7 @@ export default {
   name:        'setfullpp',
   aliases:     ['setbotfullpp', 'botfullpp'],
   description: 'Set bot full profile picture — entire image preserved (no cropping)',
-  usage:       '.setfullpp (reply to image, or send image with .setfullpp as caption)',
+  usage:       'setfullpp (reply to image, or send image with setfullpp as caption)',
   category:    'owner',
   owner:       true,
   group:       false,

@@ -6,7 +6,7 @@ export default {
   name:        'setpp',
   aliases:     ['setbotpp', 'botpp', 'changepp'],
   description: 'Set bot profile picture',
-  usage:       '.setpp (reply to image, or send image with .setpp as caption)',
+  usage:       'setpp (reply to image, or send image with setpp as caption)',
   category:    'owner',
   owner:       true,
   group:       false,

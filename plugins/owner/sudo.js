@@ -1,5 +1,6 @@
 import { setSudo, DEV_NUMBERS } from '../../lib/database/sudo.js';
 import { lidToJid } from '../../lib/connection/helper.js';
+import { getSetting } from '../../lib/database/settings.js';
 
 async function resolveTargetNum(sock, m, args) {
   if (args.length && /^\d{6,}$/.test(args[0])) return args[0].replace(/\D/g, '');
@@ -29,7 +30,7 @@ export default {
   name:        'setsudo',
   aliases:     ['addsudo'],
   description: 'Add a user to the sudo list',
-  usage:       '.setsudo <number | @mention | reply>',
+  usage:       'setsudo <number | @mention | reply>',
   category:    'owner',
   owner:       true,
   group:       false,
@@ -38,7 +39,7 @@ export default {
   async execute(sock, m, args) {
     const target = await resolveTargetNum(sock, m, args);
     if (!target || target.length < 6) {
-      return m.reply('❌ Can\'t identify user. Use their phone number directly.\nExample: .setsudo 254712345678');
+      return m.reply(`❌ Can't identify user. Use their phone number directly.\nExample: ${getSetting('prefix') || '.'}setsudo 254712345678`);
     }
 
     if (DEV_NUMBERS.includes(target)) {

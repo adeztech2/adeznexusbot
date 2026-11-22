@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { safeGet } from '../../lib/utils/safeUrl.js';
 
 function getExtensionFromMime(mime) {
   const m = mime.split(';')[0].trim().toLowerCase();
@@ -71,11 +71,12 @@ export default {
     await m.react('🌐');
 
     try {
-      const response = await axios.get(url, {
+      const response = await safeGet(url, {
         responseType: 'arraybuffer',
         validateStatus: () => true,
         timeout: 60000,
-        maxContentLength: 100 * 1024 * 1024,
+        maxContentLength: 20 * 1024 * 1024,
+        maxBodyLength: 20 * 1024 * 1024,
         headers: { 'User-Agent': 'Mozilla/5.0' },
       });
 

@@ -48,7 +48,7 @@ export default {
     const botJid = sock.user.id.replace(/:\d+@/, '@');
 
     if (!quoted) {
-      return m.reply('❌ Reply to an image, video, or view once message!\n\nExample: Reply to media with !vv');
+      return m.reply(`❌ Reply to an image, video, or view once message!\n\nExample: Reply to media with ${getSetting('prefix') || '.'}vv`);
     }
 
     try {
@@ -77,7 +77,7 @@ export default {
         return m.reply('❌ Please reply to an image, video, or audio message!');
       }
       if (!hasSource(found.media)) {
-        return m.reply('❌ I can\'t download that one. WhatsApp removes view-once media from replies, and I only keep received messages for 10 minutes. Reply with !vv soon after it arrives.');
+        return m.reply(`❌ I can't download that one. WhatsApp removes view-once media from replies, and I only keep received messages for 10 minutes. Reply with ${getSetting('prefix') || '.'}vv soon after it arrives.`);
       }
 
       const messageType  = found.type;

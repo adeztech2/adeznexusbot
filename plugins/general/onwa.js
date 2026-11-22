@@ -1,3 +1,5 @@
+import { getSetting } from '../../lib/database/settings.js';
+
 export default {
   name:        'onwa',
   aliases:     ['onwhatsapp', 'checkwa', 'checknumber'],
@@ -13,7 +15,7 @@ export default {
 
     if (!raw || raw.length < 7 || raw.length > 15) {
       return m.reply(
-        `❌ Please provide a valid phone number with country code.\n\nExample: ,onwa 254712345678`
+        `❌ Please provide a valid phone number with country code.\n\nExample: ${getSetting('prefix') || '.'}onwa 254712345678`
       );
     }
 

@@ -60,7 +60,7 @@ export default {
   name:        'tovideo',
   aliases:     ['s2video', 's2vid', 'stickertovideo'],
   description: 'Convert an animated sticker back to a video (muted MP4)',
-  usage:       '.tovideo — reply to an animated sticker',
+  usage:       'tovideo — reply to an animated sticker',
   category:    'utilities',
   timeout:     120_000,
   owner:       false,

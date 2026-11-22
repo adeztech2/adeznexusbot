@@ -7,7 +7,7 @@ export default {
   name:        'gfullpp',
   aliases:     ['gcfullpp', 'setgcfullpp', 'setfullicon', 'groupfullpp'],
   description: 'Set full group profile picture — entire image preserved (no cropping)',
-  usage:       '.gfullpp (reply to image, or send image with .gfullpp as caption)',
+  usage:       'gfullpp (reply to image, or send image with gfullpp as caption)',
   category:    'group',
   owner:       false,
   group:       true,

@@ -109,10 +109,10 @@ const support = {
 // ── .time : current date and time in the bot's timezone ───────────────────────
 const time = {
   ...DEF,
-  name:        'time',
-  aliases:     ['date', 'clock', 'now'],
-  description: 'Show the current date and time',
-  usage:       'time',
+  name:        'clock',
+  aliases:     ['date', 'now'],
+  description: 'Show the bot\'s current date and time',
+  usage:       'clock',
 
   async execute(sock, m) {
     const tz  = getSetting('timezone') || 'Africa/Nairobi';

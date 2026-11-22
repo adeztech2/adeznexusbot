@@ -15,7 +15,7 @@ export default {
   name:        'toimage',
   aliases:     ['s2image', 's2img', '2img', 'stickertoimage'],
   description: 'Convert a sticker to a high-quality image (PNG)',
-  usage:       '.toimage — reply to a sticker',
+  usage:       'toimage — reply to a sticker',
   category:    'utilities',
   owner:       false,
   group:       false,
