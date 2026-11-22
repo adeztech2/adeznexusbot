@@ -1,5 +1,6 @@
 import { getCommands } from '../../lib/connection/commandHandler.js';
 import { getSetting }  from '../../lib/database/settings.js';
+import { sendBtnOrText, getFooter } from '../../lib/buttonHandler.js';
 
 const CAT_ICONS = {
   general: '🎯',
@@ -82,6 +83,24 @@ export default {
       text += '\n\n';
     }
 
-    m.reply(text.trimEnd());
+    const buttons = [
+      { id: `${PREFIX}ping`,  text: '⚡ Ping' },
+      { id: `${PREFIX}alive`, text: '🟢 Alive' },
+      { id: `${PREFIX}owner`, text: '👑 Owner' },
+    ];
+    const channel = getSetting('channelUrl');
+    if (channel) {
+      buttons.push({
+        name: 'cta_url',
+        buttonParamsJson: JSON.stringify({ display_text: '📢 Channel', url: channel }),
+      });
+    }
+
+    return sendBtnOrText(sock, m.from, {
+      title: '',
+      text: text.trimEnd(),
+      footer: getFooter(),
+      buttons,
+    });
   },
 };
