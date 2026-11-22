@@ -17,16 +17,14 @@ services:
       - key: OWNER_NUMBER
         sync: false
       - key: DATABASE_URL
-        sync: false   # paste your Supabase *Session pooler* string in the Render dashboard
+        sync: false   postgresql://postgres.utzjmucidbuplbozqkkz:sb_publishable_AYlfwww63_UeFm9XtcvHCw_T_p22xtk@aws-1-eu-west-1.pooler.supabase.com:5432/postgres
       - key: API_KEYS
         sync: false
+      - key: MP3_API_URL
+        value: https://mcow.gifted.co.ke
       - key: GIFTED_TECH_API
         value: https://api.gifted.co.ke
       - key: GIFTED_API_KEY
         value: gifted
       - key: KEEP_ALIVE_MINUTES
         value: "4"
-      - key: MODE
-        value: public
-      - key: PREFIX
-        value: "."
