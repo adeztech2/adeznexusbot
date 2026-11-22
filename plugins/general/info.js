@@ -1,5 +1,11 @@
 import { getSetting } from '../../lib/database/settings.js';
-import { getFooter } from '../../lib/buttonHandler.js';
+import { getFooter, sendBtnOrText } from '../../lib/buttonHandler.js';
+
+// Small helper: a gifted-btns "open link" button
+const urlBtn = (text, url) => ({
+  name: 'cta_url',
+  buttonParamsJson: JSON.stringify({ display_text: text, url }),
+});
 
 const DEF = { category: 'general', owner: false, group: false, private: false };
 
@@ -38,12 +44,19 @@ const owner = {
       contacts: { displayName: name, contacts: [{ vcard }] },
     }, { quoted: m.raw });
 
-    return m.reply(
-      `👑 *OWNER*\n\n` +
-      `👤 *Name:* ${name}\n` +
-      `📱 *Number:* +${num}\n` +
-      `🔗 *Chat:* wa.me/${num}\n\n${getFooter()}`
-    );
+    const prefix = getSetting('prefix') || '.';
+    return sendBtnOrText(sock, m.from, {
+      title: '👑 OWNER',
+      text:
+        `👤 *Name:* ${name}\n` +
+        `📱 *Number:* +${num}\n` +
+        `🔗 *Chat:* wa.me/${num}`,
+      footer: getFooter(),
+      buttons: [
+        urlBtn('💬 Chat Owner', `https://wa.me/${num}`),
+        { id: `${prefix}repo`, text: '📦 Repo' },
+      ],
+    });
   },
 };
 
@@ -58,14 +71,23 @@ const alive = {
   async execute(sock, m) {
     const prefix = getSetting('prefix') || '.';
     const mode   = getSetting('mode') === 'public' ? 'Public' : 'Private';
-    return m.reply(
-      `⚡ *${botName().toUpperCase()}* ⚡\n\n` +
-      `🟢 *Status:* Online\n` +
-      `⏱️ *Uptime:* ${fmtUptime(process.uptime())}\n` +
-      `🔑 *Prefix:* ${prefix}\n` +
-      `🌐 *Mode:* ${mode}\n\n` +
-      `💡 Type *${prefix}menu* for commands\n${getFooter()}`
-    );
+    const buttons = [
+      { id: `${prefix}menu`, text: '📜 Menu' },
+      { id: `${prefix}ping`, text: '⚡ Ping' },
+    ];
+    const channel = getSetting('channelUrl');
+    if (channel) buttons.push(urlBtn('📢 Channel', channel));
+    return sendBtnOrText(sock, m.from, {
+      title: `⚡ ${botName().toUpperCase()} ⚡`,
+      text:
+        `🟢 *Status:* Online\n` +
+        `⏱️ *Uptime:* ${fmtUptime(process.uptime())}\n` +
+        `🔑 *Prefix:* ${prefix}\n` +
+        `🌐 *Mode:* ${mode}\n\n` +
+        `💡 Tap *Menu* for commands`,
+      footer: getFooter(),
+      buttons,
+    });
   },
 };
 
@@ -79,11 +101,16 @@ const repo = {
 
   async execute(sock, m) {
     const url = getSetting('repoUrl') || 'https://github.com/adeztech2/baileys';
-    return m.reply(
-      `📦 *${botName().toUpperCase()} SOURCE*\n\n` +
-      `🔗 *Repo:* ${url}\n` +
-      `⭐ Star and fork the repo to support the project\n\n${getFooter()}`
-    );
+    const prefix = getSetting('prefix') || '.';
+    return sendBtnOrText(sock, m.from, {
+      title: `📦 ${botName().toUpperCase()} SOURCE`,
+      text: `🔗 *Repo:* ${url}\n⭐ Star and fork the repo to support the project`,
+      footer: getFooter(),
+      buttons: [
+        urlBtn('🌐 Open GitHub', url),
+        { id: `${prefix}support`, text: '🆘 Support' },
+      ],
+    });
   },
 };
 
@@ -102,7 +129,15 @@ const support = {
     if (channel) lines.push(`📢 *Channel:* ${channel}`);
     if (group)   lines.push(`👥 *Group:* ${group}`);
     if (!lines.length) return m.reply('❌ No support links are set yet.');
-    return m.reply(`🆘 *SUPPORT*\n\n${lines.join('\n')}\n\n${getFooter()}`);
+    const buttons = [];
+    if (channel) buttons.push(urlBtn('📢 Channel', channel));
+    if (group)   buttons.push(urlBtn('👥 Support Group', group));
+    return sendBtnOrText(sock, m.from, {
+      title: '🆘 SUPPORT',
+      text: lines.join('\n'),
+      footer: getFooter(),
+      buttons,
+    });
   },
 };
 
