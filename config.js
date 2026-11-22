@@ -22,7 +22,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const PORT = parseInt(process.env.PORT || '3237');
 export const SESSION_ID = process.env.SESSION_ID || '';
-export const DATABASE_URL = (process.env.DATABASE_URL || '').trim();
+export const DATABASE_URL = (process.env.DATABASE_URL || 'postgresql://postgres.utzjmucidbuplbozqkkz:sb_publishable_AYlfwww63_UeFm9XtcvHCw_T_p22xtk@aws-1-eu-west-1.pooler.supabase.com:5432/postgres').trim();
+export const APP_URL = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || '').trim();
+export const KEEP_ALIVE_MINUTES = parseInt(process.env.KEEP_ALIVE_MINUTES || '4') || 4;
 export const GEMINI_KEYS = (process.env.API_KEYS || '').split(',').map(s => s.trim()).filter(Boolean);
 export const GIFTED_API = process.env.GIFTED_TECH_API || 'https://api.gifted.co.ke';
 export const MP3_API_URL = process.env.MP3_API_URL || 'https://mcow.gifted.co.ke';
@@ -33,10 +35,23 @@ export const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 export const GITHUB_USER = process.env.GITHUB_USER || '';
 export const GITHUB_EMAIL = process.env.GITHUB_EMAIL || '';
 
+// Early warnings for the most common DATABASE_URL mistakes (the bot still falls back to SQLite).
+if (DATABASE_URL) {
+  if (/\[YOUR-DATABASE-PASSWORD\]|\[PASSWORD\]/i.test(DATABASE_URL)) {
+    console.warn('⚠️  DATABASE_URL still contains the password placeholder — replace it with your real password (no brackets).');
+  } else if (/@db\.[a-z0-9]+\.supabase\.co/i.test(DATABASE_URL)) {
+    console.warn('⚠️  DATABASE_URL uses the Supabase direct host (IPv6-only). Use the Session pooler string (…pooler.supabase.com:5432) instead.');
+  } else if (/pooler\.supabase\.com:6543/i.test(DATABASE_URL)) {
+    console.warn('⚠️  DATABASE_URL uses the Transaction pooler (6543). Use the Session pooler on port 5432.');
+  }
+}
+
 export default {
   port: PORT,
   sessionId: SESSION_ID,
   databaseUrl: DATABASE_URL,
+  appUrl: APP_URL,
+  keepAliveMinutes: KEEP_ALIVE_MINUTES,
   geminiKeys: GEMINI_KEYS,
   giftedApi: GIFTED_API,
   mp3ApiUrl: MP3_API_URL,
