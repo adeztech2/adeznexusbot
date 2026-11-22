@@ -6,6 +6,8 @@ const CAT_ICONS = {
   groups:  '👥',
   group:   '👥',
   tools:   '🛠️',
+  fun:     '🎉',
+  devtools:'💻',
   media:   '🎵',
   owner:   '🔐',
   misc:    '📦',

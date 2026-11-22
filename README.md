@@ -34,8 +34,12 @@
 ## Features
 
 - **General:** AI chat, OCR, remove background, photo editors, screenshots, PDF maker, encoders and decoders, whois, domain check, view-once saver
-- **Groups:** tag all, hidetag, promote, demote, remove, open, close, link, revoke, group profile picture
+- **Groups:** tag all, hidetag, promote, demote, remove, open, close, link, revoke, group profile picture, antilink, warn system, welcome and goodbye messages
 - **Media:** YouTube search, audio and video download, TikTok, Instagram, Facebook, Twitter, stickers, convert to image or video
+- **Fun:** dice, coin, 8ball, rock-paper-scissors, slots, jokes, facts, truth or dare, ship, rate, text effects, trivia, riddles, hangman, would-you-rather, hug/pat/slap, roast, compliment, aura, fortune
+- **Tools:** calculator, unit and currency converters, weather, translate, dictionary, QR codes, text-to-speech, polls, world time, password generator
+- **Dev tools:** JSON formatter, JWT decoder, regex tester, hashes, UUIDs, timestamps, colour converter, npm, GitHub (`gh`) and IP lookups
+- **Image and audio effects:** blur, grey, invert, sepia, flip, mirror, rotate, pixelate, circle, bass, nightcore, slow, fast, tomp3, togif, random cat, dog, fox and memes
 - **Owner:** sudo users, settings, set profile picture, status upload, exec
 - **Auto features:** view and like status, anti-delete, anti-edit, newsletter react, auto-join
 - **Keep-alive:** pings its own `/health` route so free hosts don't sleep it

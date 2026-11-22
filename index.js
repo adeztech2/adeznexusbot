@@ -33,6 +33,7 @@ import {
   startPeriodicCleanup
 } from './lib/database/antidelete.js';
 import { antiEditHandler } from './lib/database/antiedit.js';
+import { handleAntiLink, handleParticipantsUpdate } from './lib/groupGuard.js';
 import { sendPresence } from './lib/connection/presenceHandler.js';
 import { initDb } from './lib/database/db.js';
 import {
@@ -361,14 +362,19 @@ async function startBot() {
       } catch (_) {}
     });
 
-    sock.ev.on('group-participants.update', async ({ id }) => {
+    sock.ev.on('group-participants.update', async (update) => {
       try {
-        metadataCache.invalidate(id);
+        metadataCache.invalidate(update.id);
 
-        const meta = await sock.groupMetadata(id);
+        const meta = await sock.groupMetadata(update.id);
 
-        setCachedGroup(id, meta);
+        setCachedGroup(update.id, meta);
       } catch (_) {}
+
+      // Welcome / goodbye messages
+      handleParticipantsUpdate(sock, update).catch(err => {
+        console.error('Participants handler error:', err.message);
+      });
     });
 
     // ── Messages ──────────────────────────────────────────────────────
@@ -430,6 +436,10 @@ async function startBot() {
         handleAutoReactStatus(sock, m).catch(() => {});
         handleAutoNewsletterReact(sock, m).catch(() => {});
         handleAutoJoinGroup(sock, m).catch(() => {});
+
+        handleAntiLink(sock, msg).catch(err => {
+          console.error('Antilink error:', err.message);
+        });
 
         sendPresence(sock, m).catch(() => {});
 
