@@ -38,6 +38,7 @@ import { sendPresence } from './lib/connection/presenceHandler.js';
 import { handleChatbot } from './lib/chatbot.js';
 import { sendButtons, getFooter } from './lib/buttonHandler.js';
 import { initDb } from './lib/database/db.js';
+import { resolveBotId } from './lib/database/botId.js';
 import {
   loadSession,
   useAuthState,
@@ -135,9 +136,10 @@ async function startBot() {
     botStatus = 'connecting';
     console.log('Starting ADEZ NEXUS...');
 
+    await loadSession(config.sessionId);
+    resolveBotId(config.sessionId);   // each bot gets its own database tables
     await initDb();
     await initSettings();
-    await loadSession(config.sessionId);
 
     const { state, saveCreds } = await useAuthState();
     const { version } = await fetchLatestWaWebVersion();
@@ -549,4 +551,5 @@ app.listen(config.port, '0.0.0.0', () => {
   startBot();
 });
 
-      
+
+        
