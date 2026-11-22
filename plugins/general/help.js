@@ -32,7 +32,6 @@ export default {
     const TZ       = getSetting('timezone') || 'Africa/Nairobi';
     const MODE     = getSetting('mode') || 'private';
     const commands = getCommands();
-    const userName = m.pushName || 'User';
 
     if (args[0]) {
       const cmd = commands.get(args[0].toLowerCase());
@@ -59,28 +58,37 @@ export default {
       totalCmds++;
     });
 
-    const now  = new Date();
-    const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: TZ });
+    const OWNER = getSetting('ownerName') || 'Owner';
+    const W     = 29;   // inner width of the box
+
+    // "╭───〔 TITLE 〕───╮" style rows, centred
+    const row = (l, title, r) => {
+      const label = `〔 ${title} 〕`;
+      const fill  = Math.max(6, W - label.length);
+      const left  = Math.floor(fill / 2);
+      return `${l}${'─'.repeat(left)}${label}${'─'.repeat(fill - left)}${r}`;
+    };
 
     let text =
-      `🐼 *${BOT_NAME.toUpperCase()} v1.0.0*\n` +
-      `─────────────────\n` +
-      `👤 *User:* ${userName}\n` +
-      `🔑 *Prefix:* \`${PREFIX}\`\n` +
-      `🌐 *Mode:* ${MODE === 'private' ? 'Private' : 'Public'}\n` +
-      `🕐 *Time:* ${time}\n` +
-      `📦 *Commands:* ${totalCmds}\n` +
-      readmore + '\n';
+      row('╭', BOT_NAME.toUpperCase(), '╮') + '\n' +
+      `│\n` +
+      `│ 〔 BOT INFORMATION 〕\n` +
+      `│ . Bot Name: ${BOT_NAME.toUpperCase()}\n` +
+      `│ . Owner: ${OWNER}\n` +
+      `│ . Prefix: ${PREFIX}\n` +
+      `│ . Mode: ${MODE === 'private' ? 'Private' : 'Public'}\n` +
+      `│ . Plugins: ${totalCmds}\n` +
+      `│\n` +
+      readmore;
 
     for (const cat of Object.keys(categories).sort()) {
-      const icon  = CAT_ICONS[cat] || '📦';
-      const cmds  = categories[cat].sort();
-      const count = cmds.length;
-
-      text += `${icon} *${cat.toUpperCase()}* [${count}]\n`;
-      text += cmds.map(c => `  ╺ ${PREFIX}${c}`).join('\n');
-      text += '\n\n';
+      const cmds = categories[cat].sort();
+      text += row('├', cat.toUpperCase(), '') + '\n';
+      text += cmds.map(c => `│ . ${c}`).join('\n') + '\n';
+      text += `│\n`;
     }
+
+    text += `╰${'─'.repeat(W)}╯\n\nᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴀᴅᴇᴢ ᴛᴇᴄʜ`;
 
     m.reply(text.trimEnd());
   },
