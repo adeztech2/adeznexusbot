@@ -17,7 +17,7 @@ services:
       - key: OWNER_NUMBER
         sync: false
       - key: DATABASE_URL
-        value: postgresql://postgres.utzjmucidbuplbozqkkz:Umeniruka sana😂😂,,show some love back💯@aws-0-REGION.pooler.supabase.com:5432/postgres
+        sync: false   # paste your Supabase *Session pooler* string in the Render dashboard
       - key: API_KEYS
         sync: false
       - key: GIFTED_TECH_API
