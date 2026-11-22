@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { sendAudioSmart } from '../../lib/utils/mediaUtils.js';
 import { getFooter } from '../../lib/buttonHandler.js';
 
 const API = 'https://api-v2.hearthis.at';
@@ -69,17 +68,22 @@ export default {
       `🎧 *${title}*\n👤 ${artist}\n⏱️ ${fmtDuration(track.duration)}\n\n_Sending — long mixes can take a few minutes…_`
     );
 
+    const fileName = `${title.replace(/[^\w\s.-]/g, '').trim() || 'mix'}.mp3`;
     try {
-      await sendAudioSmart(sock, m.from, url, {
-        title,
-        fileName: `${title.replace(/[^\w\s.-]/g, '').trim() || 'mix'}.mp3`,
-        caption:  `🎧 *${title}*\n👤 ${artist}\n\n${getFooter()}`,
-        quoted:   m.raw,
-      });
+      // Always send as a playable audio message
+      await sock.sendMessage(m.from, { audio: { url }, mimetype: 'audio/mpeg', fileName }, { quoted: m.raw });
     } catch (err) {
-      await m.react('❌'); m._failed = true;
-      return m.reply(`❌ Could not send the mix: ${err.message}`);
+      // WhatsApp can reject very large audio — fall back to an MP3 file so the mix isn't lost
+      console.error('[mix] audio send failed, sending as document:', err.message);
+      try {
+        await sock.sendMessage(m.from, {
+          document: { url }, mimetype: 'audio/mpeg', fileName,
+          caption: `🎧 *${title}*\n👤 ${artist}\n\n${getFooter()}`,
+        }, { quoted: m.raw });
+      } catch (err2) {
+        await m.react('❌'); m._failed = true;
+        return m.reply(`❌ Could not send the mix: ${err2.message}`);
+      }
     }
   },
 };
-        
