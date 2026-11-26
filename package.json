@@ -1,5 +1,5 @@
 {
-  "name": "parapanda",
+  "name": "nexus",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -19,7 +19,6 @@
     "gifted-btns": "*",
     "pg": "*",
     "pino": "*",
-    "sharp": "*",
-    "wa-sticker-formatter": "*"
+    "sharp": "*"
   }
 }
