@@ -94,10 +94,10 @@ function context() {
   return { prefix, botName, mode, time };
 }
 
-// ── .menu  (text menu + link card + verified-contact header) ───────────────
+// ── .menu2  (text menu + link card + verified-contact header) ───────────────
 const menu = {
   name:        'help',
-  aliases:     ['menu', 'commands'],
+  aliases:     ['menu2', 'commands'],
   description: 'Show all available commands',
   usage:       'help [command]',
   category:    'general',
@@ -144,11 +144,11 @@ const menu = {
 // ── .menu2  (the previous button-style menu, kept as an alternative) ───────
 const readmore = String.fromCharCode(8206).repeat(4001);
 
-const menu2 = {
-  name:        'menu2',
+const menu = {
+  name:        'menu',
   aliases:     ['buttonmenu'],
   description: 'Menu with buttons',
-  usage:       'menu2',
+  usage:       'menu',
   category:    'general',
   owner:       false,
   group:       false,
