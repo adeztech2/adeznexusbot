@@ -6,5 +6,4 @@ lib/session/*.db-wal
 auth_info_baileys/
 .env
 .replit
-package-lock.json
 lib/session/creds.json
