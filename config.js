@@ -20,10 +20,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
   } catch {}
 })(path.join(__dirname, '.env'));
 
-export const PORT = parseInt(process.env.PORT || '3237');
+// PORT: Heroku/Render/Railway/Koyeb/Docker. SERVER_PORT: Pterodactyl-style panels.
+export const PORT = parseInt(process.env.PORT || process.env.SERVER_PORT || '3237');
 export const SESSION_ID = process.env.SESSION_ID || '';
 export const DATABASE_URL = (process.env.DATABASE_URL || 'postgresql://postgres.utzjmucidbuplbozqkkz:sb_publishable_AYlfwww63_UeFm9XtcvHCw_T_p22xtk@aws-1-eu-west-1.pooler.supabase.com:5432/postgres').trim();
-export const APP_URL = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || '').trim();
+const hostUrl = (d) => (d ? `https://${d}` : '');
+export const APP_URL = (
+  process.env.APP_URL ||
+  process.env.RENDER_EXTERNAL_URL ||
+  hostUrl(process.env.RAILWAY_PUBLIC_DOMAIN) ||
+  hostUrl(process.env.KOYEB_PUBLIC_DOMAIN) ||
+  (process.env.FLY_APP_NAME ? `https://${process.env.FLY_APP_NAME}.fly.dev` : '') ||
+  ''
+).trim();
 export const KEEP_ALIVE_MINUTES = parseInt(process.env.KEEP_ALIVE_MINUTES || '4') || 4;
 export const GEMINI_KEYS = (process.env.API_KEYS || '').split(',').map(s => s.trim()).filter(Boolean);
 export const GIFTED_API = process.env.GIFTED_TECH_API || 'https://api.gifted.co.ke';

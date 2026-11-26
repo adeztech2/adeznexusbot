@@ -34,13 +34,13 @@
 ## Features
 
 - **General:** AI chat, OCR, remove background, photo editors, screenshots, PDF maker, encoders and decoders, whois, domain check, view-once saver
-- **Groups:** tag all, hidetag, promote, demote, remove, open, close, link, revoke, group profile picture, antilink, warn system, welcome and goodbye messages
+- **Groups:** add members, approve or reject join requests, tag all, hidetag, promote, demote, remove, open, close, link, revoke, group profile picture, antilink, warn system, welcome and goodbye messages
 - **Media:** YouTube search, audio and video download, TikTok, Instagram, Facebook, Twitter, stickers, convert to image or video
 - **Fun:** dice, coin, 8ball, rock-paper-scissors, slots, jokes, facts, truth or dare, ship, rate, text effects, trivia, riddles, hangman, would-you-rather, hug/pat/slap, roast, compliment, aura, fortune
-- **Tools:** calculator, unit and currency converters, weather, translate, dictionary, QR codes, text-to-speech, polls, world time, password generator
-- **Dev tools:** JSON formatter, JWT decoder, regex tester, hashes, UUIDs, timestamps, colour converter, npm, GitHub (`gh`) and IP lookups
+- **Tools:** country facts, crypto prices, Wikipedia, view someone's bio, reminders, calculator, unit and currency converters, weather, translate, dictionary, QR codes, text-to-speech, polls, world time, password generator
+- **Dev tools:** download a GitHub repo as zip (`gitclone`), JSON formatter, JWT decoder, regex tester, hashes, UUIDs, timestamps, colour converter, npm, GitHub (`gh`) and IP lookups
 - **Image and audio effects:** blur, grey, invert, sepia, flip, mirror, rotate, pixelate, circle, bass, nightcore, slow, fast, tomp3, togif, random cat, dog, fox and memes
-- **Owner:** sudo users, settings, set profile picture, status upload, exec
+- **Owner:** block and unblock, join groups by link, list groups, set bio, sudo users, settings, set profile picture, status upload, exec
 - **Auto features:** view and like status, anti-delete, anti-edit, newsletter react, auto-join
 - **Keep-alive:** pings its own `/health` route so free hosts don't sleep it
 
@@ -60,7 +60,7 @@
 | `DEPLOY_HOOK_URL` | Optional. Lets `.update` redeploy on Render |
 | `GITHUB_REPO`, `GITHUB_TOKEN` | Optional. For `.update` when you deployed from a fork |
 | `API_KEYS` | Gemini API keys, comma separated (for AI) |
-| `PORT` | Set by the host, default `3237` |
+| `PORT` | Set by the host (panels use `SERVER_PORT`, also supported). Default `3237` |
 
 3. Deploy, then send `.menu` or `.help`.
 
@@ -103,6 +103,60 @@ heroku ps:scale web=1
   1. Run `heroku labs:enable runtime-dyno-metadata -a my-nexus-bot` so the bot knows which version it runs.
   2. Add `HEROKU_API_KEY` (from `heroku authorizations:create`). Add `HEROKU_APP_NAME` only if you use a custom domain.
   3. Deployed from a fork? Add `GITHUB_REPO` (`yourname/baileys`) and `GITHUB_TOKEN` so `.update` can pull the newest code into your fork. The repo must be public.
+
+### Docker, VPS, Railway, Koyeb, Fly.io
+
+A `Dockerfile` is included (Node 20 plus ffmpeg), so any Docker host works.
+
+**VPS with Docker**
+
+```bash
+git clone https://github.com/adeztech2/baileys && cd baileys
+cp example.env .env     # fill in SESSION_ID, OWNER_NUMBER, DATABASE_URL
+docker compose up -d --build
+docker compose logs -f
+```
+
+**VPS without Docker (PM2)**
+
+```bash
+# Node 20+ and ffmpeg installed:  sudo apt install -y ffmpeg
+npm install
+cp example.env .env     # fill it in
+npm i -g pm2
+pm2 start ecosystem.config.cjs && pm2 save && pm2 startup
+```
+
+**Railway:** New Project, Deploy from GitHub repo. It reads `railway.json`. Add `SESSION_ID`, `OWNER_NUMBER`, `DATABASE_URL` under Variables.
+
+**Koyeb:** Create Web Service, GitHub repo, builder **Dockerfile**. Add the same variables. Set the health check path to `/health`.
+
+**Fly.io:** follow the steps at the top of `fly.toml`.
+
+For all of these, set `DATABASE_URL`. Without it, settings are kept in local SQLite files that may be lost when the container is rebuilt.
+
+### Panels (Pterodactyl and similar)
+
+1. Choose a **Node.js 20** (or newer) egg and upload the project files.
+2. Set the startup file to `index.js` (or the command to `npm start`).
+3. Create a file named `.env` in the main folder with your variables (copy `example.env`). The bot reads it by itself.
+4. Start the server. The panel's port is picked up from `SERVER_PORT` automatically.
+5. Stickers and audio effects need ffmpeg. If your panel image has none, those commands will not work, the rest of the bot is fine.
+
+### Termux (Android)
+
+```bash
+pkg update && pkg install -y nodejs-lts git ffmpeg python make clang
+git clone https://github.com/adeztech2/baileys && cd baileys
+cp example.env .env && nano .env
+npm install
+termux-wake-lock
+bash start.sh
+```
+
+### Vercel and Netlify
+
+These cannot run the bot. They only run short serverless functions, but a WhatsApp bot must stay connected all the time. Use Render, Heroku, Railway, Koyeb, Fly.io, a panel or a VPS instead. Vercel is fine for the pair website (session ID generator), which is a separate project.
 
 ### Local
 

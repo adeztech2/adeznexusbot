@@ -533,10 +533,12 @@ async function reconnectBot() {
 }
 
 // ── Process handlers ──────────────────────────────────────────────────
-process.on('SIGINT', () => {
-  console.log('\nADEZ NEXUS stopped');
-  process.exit(0);
-});
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => {
+    console.log('\nADEZ NEXUS stopped');
+    process.exit(0);
+  });
+}
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);

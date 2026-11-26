@@ -1,0 +1,11 @@
+# VPS:  cp example.env .env  (fill it in)  then  docker compose up -d --build
+services:
+  nexus:
+    build: .
+    container_name: adez-nexus
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3237:3237"
+    volumes:
+      - ./lib/session:/app/lib/session   # keeps SQLite settings across restarts

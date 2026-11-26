@@ -1,10 +1,13 @@
 {
   "name": "Nexus WhatsApp Bot",
-  "description": "ADEZ NEXUS - WhatsApp bot built on Baileys",
+  "description": "ADEZ TECH Nexus - WhatsApp bot built on Baileys",
   "repository": "https://github.com/adeztech2/baileys",
   "keywords": ["whatsapp", "bot", "baileys", "nodejs"],
   "stack": "heroku-24",
-  "buildpacks": [{ "url": "heroku/nodejs" }],
+  "buildpacks": [
+    { "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git" },
+    { "url": "heroku/nodejs" }
+  ],
   "formation": {
     "web": { "quantity": 1, "size": "basic" }
   },

@@ -1,0 +1,8 @@
+node_modules
+.git
+.env
+lib/session/*.db
+lib/session/*.db-shm
+lib/session/*.db-wal
+lib/session/creds.json
+npm-debug.log
