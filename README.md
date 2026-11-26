@@ -53,8 +53,9 @@
 | --- | --- |
 | `SESSION_ID` | Your session ID (starts with `ADEZ~`) |
 | `OWNER_NUMBER` | Your number, digits only with country code |
+| `PREFIX` | Command prefix, 1-3 characters (default `.`). Applied when it changes; `.prefix` can still change it later |
 | `DATABASE_URL` | PostgreSQL URL. Heroku fills it in with the Postgres add-on. Without it, settings use local SQLite and are lost on restart |
-| `APP_URL` | Public URL of your app, for keep-alive. Required on Heroku, automatic on Render |
+| `APP_URL` | Optional. Public URL of your app, for keep-alive (automatic on Render; not needed on a Heroku Basic dyno) |
 | `KEEP_ALIVE_MINUTES` | Ping interval, default `4` |
 | `HEROKU_API_KEY` | Optional. Lets `.update` redeploy on Heroku |
 | `DEPLOY_HOOK_URL` | Optional. Lets `.update` redeploy on Render |
@@ -79,7 +80,7 @@ Click **Deploy to Render**, or use **New → Blueprint** with your fork. Fill in
 | App name | Pick a name, for example `my-nexus-bot` |
 | `SESSION_ID` | Your session ID (`ADEZ~...`) |
 | `OWNER_NUMBER` | Your number with country code, digits only |
-| `APP_URL` | `https://my-nexus-bot.herokuapp.com` (your app name above) |
+| `PREFIX` | Command prefix, `.` by default |
 
 The Postgres add-on is added for you and fills in `DATABASE_URL` by itself.
 When the build finishes, open the app's **Resources** tab and make sure the **web** dyno is ON, then send `.menu` to the bot.
@@ -89,7 +90,7 @@ When the build finishes, open the app's **Resources** tab and make sure the **we
 ```bash
 heroku create my-nexus-bot
 heroku addons:create heroku-postgresql:essential-0
-heroku config:set SESSION_ID=ADEZ~... OWNER_NUMBER=254... APP_URL=https://my-nexus-bot.herokuapp.com
+heroku config:set SESSION_ID=ADEZ~... OWNER_NUMBER=254... PREFIX=.
 git push heroku main
 heroku ps:scale web=1
 ```

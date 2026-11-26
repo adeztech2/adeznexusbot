@@ -1,17 +1,38 @@
 {
-  "name": "Nexus WhatsApp Bot",
-  "description": "ADEZ TECH Nexus - WhatsApp bot built on Baileys",
+  "name": "ADEZ Nexus WhatsApp Bot",
+  "description": "WhatsApp bot with 250+ commands: group moderation, media tools, games, dev tools, AI chat and more. Fill in 3 fields and deploy.",
   "repository": "https://github.com/adeztech2/baileys",
-  "keywords": ["whatsapp", "bot", "baileys", "nodejs"],
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "nodejs",
+    "multi-device",
+    "group-management",
+    "ai",
+    "stickers",
+    "downloader"
+  ],
   "stack": "heroku-24",
   "buildpacks": [
-    { "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git" },
-    { "url": "heroku/nodejs" }
+    {
+      "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
   ],
   "formation": {
-    "web": { "quantity": 1, "size": "basic" }
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
   },
-  "addons": [{ "plan": "heroku-postgresql:essential-0" }],
+  "addons": [
+    {
+      "plan": "heroku-postgresql:essential-0"
+    }
+  ],
   "env": {
     "SESSION_ID": {
       "description": "Your WhatsApp session ID (starts with ADEZ~)",
@@ -21,29 +42,10 @@
       "description": "Your WhatsApp number with country code, digits only (no +)",
       "required": true
     },
-    "APP_URL": {
-      "description": "Your app URL for keep-alive: https://YOUR-APP-NAME.herokuapp.com (use the same app name you typed above)",
+    "PREFIX": {
+      "description": "Bot command prefix",
+      "value": ".",
       "required": true
-    },
-    "API_KEYS": {
-      "description": "Gemini API keys for the AI commands, comma separated (optional)",
-      "required": false
-    },
-    "HEROKU_API_KEY": {
-      "description": "Optional. Lets the .update command redeploy the bot. Get it with: heroku authorizations:create",
-      "required": false
-    },
-    "GITHUB_REPO": {
-      "description": "Optional. Only if you deployed from your own fork, e.g. yourname/baileys. Used by .update",
-      "required": false
-    },
-    "GITHUB_TOKEN": {
-      "description": "Optional. GitHub token so .update can sync your fork",
-      "required": false
-    },
-    "GIFTED_TECH_API": { "value": "https://api.gifted.co.ke" },
-    "GIFTED_API_KEY": { "value": "gifted" },
-    "MP3_API_URL": { "value": "https://mcow.gifted.co.ke" },
-    "KEEP_ALIVE_MINUTES": { "value": "4" }
+    }
   }
 }
