@@ -94,10 +94,10 @@ function context() {
   return { prefix, botName, mode, time };
 }
 
-// ── .menu2  (text menu + link card + verified-contact header) ───────────────
+// ── .menu  (text menu + link card + verified-contact header) ───────────────
 const menu = {
   name:        'help',
-  aliases:     ['menu2', 'commands'],
+  aliases:     ['menu', 'commands'],
   description: 'Show all available commands',
   usage:       'help [command]',
   category:    'general',
@@ -141,14 +141,76 @@ const menu = {
   },
 };
 
-// ── .menu2  (the previous button-style menu, kept as an alternative) ───────
-const readmore = String.fromCharCode(8206).repeat(4001);
+// ── .menu2  (button menu with the commands laid out in tables) ─────────────
+const readmore  = String.fromCharCode(8206).repeat(4001);
+const MAX_WIDTH = 34; // characters that fit on one line of a phone screen in monospace
 
-const menu = {
-  name:        'menu',
-  aliases:     ['buttonmenu'],
-  description: 'Menu with buttons',
-  usage:       'menu',
+// Box-table helpers. Only plain characters go inside the tables (emoji are double-width
+// in monospace and would break the alignment), so emoji stay in the titles outside them.
+function infoTable(rows) {
+  const kw = Math.max(...rows.map(([k]) => k.length));
+  const vw = Math.max(...rows.map(([, v]) => v.length));
+  const out = [`┌${'─'.repeat(kw + 2)}┬${'─'.repeat(vw + 2)}┐`];
+  for (const [k, v] of rows) out.push(`│ ${k.padEnd(kw)} │ ${v.padEnd(vw)} │`);
+  out.push(`└${'─'.repeat(kw + 2)}┴${'─'.repeat(vw + 2)}┘`);
+  return out.join('\n');
+}
+
+function categoryTable(title, items) {
+  let w = Math.max(...items.map((i) => i.length));
+  let cols = Math.min(3, items.length);
+  while (cols > 1 && cols * (w + 2) + (cols - 1) + 2 > MAX_WIDTH) cols--;
+  while (cols * (w + 2) + (cols - 1) < title.length + 2) w++; // keep the title row from being cut off
+
+  const inner = cols * (w + 2) + (cols - 1);
+  const seg   = '─'.repeat(w + 2);
+  const out   = [
+    `┌${'─'.repeat(inner)}┐`,
+    `│ ${title.padEnd(inner - 2)} │`,
+    `├${Array(cols).fill(seg).join('┬')}┤`,
+  ];
+
+  for (let i = 0; i < items.length; i += cols) {
+    const cells = Array.from({ length: cols }, (_, c) => ` ${(items[i + c] || '').padEnd(w)} `);
+    out.push(`│${cells.join('│')}│`);
+  }
+  out.push(`└${Array(cols).fill(seg).join('┴')}┘`);
+  return out.join('\n');
+}
+
+function buildTableMenu({ botName, userName, prefix, mode, time, cats, total }) {
+  const known = SECTIONS.filter(([k]) => cats[k]);
+  const extra = Object.keys(cats)
+    .filter((k) => !SECTIONS.some(([s]) => s === k))
+    .sort()
+    .map((k) => [k, k.toUpperCase()]);
+
+  let t =
+    `🐼 *${botName.toUpperCase()} v1.0.0*\n` +
+    `👤 Hello, *${userName}*\n\n` +
+    '```' + infoTable([
+      ['Prefix',   prefix],
+      ['Mode',     mode === 'private' ? 'Private' : 'Public'],
+      ['Time',     time],
+      ['Commands', String(total)],
+    ]) + '```\n' +
+    `_Use ${prefix}help <command> for details_\n` +
+    readmore + '\n';
+
+  for (const [key, label] of [...known, ...extra]) {
+    const icon = CAT_ICONS[key] || '📦';
+    const cmds = cats[key];
+    t += `${icon} *${label}*\n`;
+    t += '```' + categoryTable(`${label} [${cmds.length}]`, cmds.map((c) => `${prefix}${c}`)) + '```\n\n';
+  }
+  return t.trimEnd();
+}
+
+const menu2 = {
+  name:        'menu2',
+  aliases:     ['buttonmenu', 'tablemenu'],
+  description: 'Menu with commands in tables and quick buttons',
+  usage:       'menu2',
   category:    'general',
   owner:       false,
   group:       false,
@@ -158,21 +220,10 @@ const menu = {
     const { prefix, botName, mode, time } = context();
     const { cats, total } = collect(getCommands());
 
-    let text =
-      `🐼 *${botName.toUpperCase()} v1.0.0*\n` +
-      `─────────────────\n` +
-      `👤 *User:* ${m.pushName || 'User'}\n` +
-      `🔑 *Prefix:* \`${prefix}\`\n` +
-      `🌐 *Mode:* ${mode === 'private' ? 'Private' : 'Public'}\n` +
-      `🕐 *Time:* ${time}\n` +
-      `📦 *Commands:* ${total}\n` +
-      readmore + '\n';
-
-    for (const cat of Object.keys(cats).sort()) {
-      text += `${CAT_ICONS[cat] || '📦'} *${cat.toUpperCase()}* [${cats[cat].length}]\n`;
-      text += cats[cat].map((c) => `  ╺ ${prefix}${c}`).join('\n');
-      text += '\n\n';
-    }
+    const text = buildTableMenu({
+      botName, prefix, mode, time, cats, total,
+      userName: m.pushName || 'User',
+    });
 
     const buttons = [
       { id: `${prefix}ping`,  text: '⚡ Ping' },
@@ -187,8 +238,9 @@ const menu = {
       });
     }
 
-    return sendBtnOrText(sock, m.from, { title: '', text: text.trimEnd(), footer: getFooter(), buttons });
+    return sendBtnOrText(sock, m.from, { title: '', text, footer: getFooter(), buttons });
   },
 };
 
 export default [menu, menu2];
+    
