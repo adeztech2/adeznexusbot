@@ -104,7 +104,7 @@ async function sendListMenu(sock, m) {
   const { cats, total } = collect(getCommands());
 
   let text =
-    `🐼 *${botName.toUpperCase()} v1.0.0*\n` +
+    `🐼 *${botName.toUpperCase()} v1.0.1*\n` +
     `─────────────────\n` +
     `👤 *User:* ${m.pushName || 'User'}\n` +
     `🔑 *Prefix:* \`${prefix}\`\n` +
