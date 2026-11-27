@@ -282,11 +282,9 @@ async function startBot() {
     botStatus = 'connecting';
     console.log('Starting ADEZ NEXUS...');
 
-    // ORDER MATTERS: table names depend on resolveBotId, and loadSession
-    // checks PostgreSQL for existing creds.
-    resolveBotId(config.sessionId);
-    await initDb();
     await loadSession(config.sessionId);
+    resolveBotId(config.sessionId);   // each bot gets its own database tables
+    await initDb();
     await initSettings();
 
     const { state, saveCreds } = await useAuthState();
@@ -535,3 +533,4 @@ app.listen(config.port, '0.0.0.0', () => {
   startKeepAlive();
   startBot();
 });
+    
