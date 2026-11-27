@@ -61,11 +61,15 @@
 | `DEPLOY_HOOK_URL` | Optional. Lets `.update` redeploy on Render |
 | `GITHUB_REPO`, `GITHUB_TOKEN` | Optional. For `.update` when you deployed from a fork |
 | `API_KEYS` | Gemini API keys, comma separated (for AI) |
+| `MEGAN_API_URL` | Megan API base URL, normally `https://apis.megan.qzz.io` |
+| `MEGAN_API_KEY` | Megan API key. Keep it server-side and never commit it |
 | `PORT` | Set by the host (panels use `SERVER_PORT`, also supported). Default `3237` |
 
 3. Deploy, then send `.menu` or `.help`.
 
 Prefix (default `.`) and mode (`public` or `private`) are bot settings. Change them from WhatsApp with the settings command, not with env variables.
+
+Megan integration adds `.megan`, `.mcat`, and `.mhelp` and dynamically registers the available Megan catalog. This currently exposes more than 900 endpoints across AI, downloads, search, tools, fun, sports, media, text effects, and other categories. Examples include `.gpt hello`, `.play song name`, `.video song name`, `.tiktok <url>`, `.instagram <url>`, and `.megan /api/ai/claude q=hello`.
 
 ### Render
 

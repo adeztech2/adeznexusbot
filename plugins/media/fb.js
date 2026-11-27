@@ -1,4 +1,4 @@
-import { giftedGetRetry } from '../../lib/api/gifted.js';
+import { meganRequest, pickResult } from '../../lib/api/megan.js';
 import { sendBtnOrText, extractButtonId, getFooter } from '../../lib/buttonHandler.js';
 import { isEnabled } from '../../lib/database/settings.js';
 
@@ -43,12 +43,17 @@ export default {
       return m.reply('❌ Send a Facebook video link.\n\nExample: `.fb https://www.facebook.com/watch?v=...`\nYou can also reply to a message that has the link.');
     await m.react('⬇️');
     try {
-      const data = await giftedGetRetry('/api/download/facebook', { url }, 60_000, 3, 3_000);
-      if (!data?.success || !data?.result)
-        throw new Error('Could not fetch the video. It may be private, or the link is wrong.');
+      const payload = await meganRequest('/api/download/facebook', { params: { url }, timeout: 120_000 });
+      const { data } = pickResult(payload);
+      if (!data || typeof data !== 'object') throw new Error('Could not fetch the video.');
 
-      const { title, duration, thumbnail } = data.result;
-      const { hd: hdUrl, sd: sdUrl } = pickVideos(data.result);
+      const { title, duration, thumbnail } = data;
+      const { hd: hdUrl, sd: sdUrl } = pickVideos({
+        ...data,
+        hd_video: data.hdVideo || data.hd_url || data.hd,
+        sd_video: data.sdVideo || data.sd_url || data.sd,
+        download_url: data.downloadUrl || data.download_url,
+      });
       if (!hdUrl && !sdUrl) throw new Error('No video URLs found. The video may be private.');
 
       if (!isEnabled('useButtons')) {

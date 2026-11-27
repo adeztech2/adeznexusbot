@@ -1,4 +1,4 @@
-import { giftedGet } from '../../lib/api/gifted.js';
+import { meganRequest, pickResult } from '../../lib/api/megan.js';
 import { sendBtnOrText, extractButtonId, getFooter } from '../../lib/buttonHandler.js';
 import { isEnabled } from '../../lib/database/settings.js';
 
@@ -18,10 +18,12 @@ export default {
       return m.reply('❌ That does not look like a Twitter/X URL.');
     await m.react('⬇️');
     try {
-      const data = await giftedGet('/api/download/twitter', { url }, 60_000);
-      if (!data?.success || !data?.result) throw new Error('Failed to fetch video info.');
-
-      const { thumbnail, videoUrls } = data.result;
+      const payload = await meganRequest('/api/download/twitter', { params: { url }, timeout: 120_000 });
+      const { data } = pickResult(payload);
+      const thumbnail = data.thumbnail;
+      const videoUrls = (data.videoUrls || data.media || [])
+        .filter(v => v?.type === 'video' || v?.url)
+        .map(v => ({ url: v.url, quality: v.quality || 'best' }));
       if (!videoUrls?.length) throw new Error('No video found in this tweet.');
 
       if (!isEnabled('useButtons')) {

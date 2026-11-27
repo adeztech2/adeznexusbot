@@ -23,7 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // PORT: Heroku/Render/Railway/Koyeb/Docker. SERVER_PORT: Pterodactyl-style panels.
 export const PORT = parseInt(process.env.PORT || process.env.SERVER_PORT || '3237');
 export const SESSION_ID = process.env.SESSION_ID || '';
-export const DATABASE_URL = (process.env.DATABASE_URL || 'postgresql://postgres.utzjmucidbuplbozqkkz:sb_publishable_AYlfwww63_UeFm9XtcvHCw_T_p22xtk@aws-1-eu-west-1.pooler.supabase.com:5432/postgres').trim();
+export const DATABASE_URL = (process.env.DATABASE_URL || '').trim();
 const hostUrl = (d) => (d ? `https://${d}` : '');
 export const APP_URL = (
   process.env.APP_URL ||
@@ -43,6 +43,8 @@ export const PUTER_AI_URL = process.env.PUTER_AI_URL || '';
 export const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 export const GITHUB_USER = process.env.GITHUB_USER || '';
 export const GITHUB_EMAIL = process.env.GITHUB_EMAIL || '';
+export const MEGAN_API_URL = (process.env.MEGAN_API_URL || 'https://apis.megan.qzz.io').replace(/\/$/, '');
+export const MEGAN_API_KEY = process.env.MEGAN_API_KEY || '';
 
 // Early warnings for the most common DATABASE_URL mistakes (the bot still falls back to SQLite).
 if (DATABASE_URL) {
@@ -70,4 +72,6 @@ export default {
   githubToken: GITHUB_TOKEN,
   githubUser: GITHUB_USER,
   githubEmail: GITHUB_EMAIL,
+  meganApiUrl: MEGAN_API_URL,
+  meganApiKey: MEGAN_API_KEY,
 };

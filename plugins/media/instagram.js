@@ -1,4 +1,4 @@
-import { giftedGet } from '../../lib/api/gifted.js';
+import { meganRequest, pickResult } from '../../lib/api/megan.js';
 import { sendBtnOrText, extractButtonId, getFooter } from '../../lib/buttonHandler.js';
 import { isEnabled } from '../../lib/database/settings.js';
 
@@ -17,10 +17,10 @@ export default {
     if (!url.includes('instagram.com')) return m.reply('❌ That does not look like an Instagram URL.');
     await m.react('⬇️');
     try {
-      const data = await giftedGet('/api/download/instadl', { url }, 60_000);
-      if (!data?.success || !data?.result) throw new Error('Failed to fetch content.');
-
-      const { thumbnail, download_url } = data.result;
+      const payload = await meganRequest('/api/download/instagram', { params: { url }, timeout: 120_000 });
+      const { data, mediaUrls } = pickResult(payload);
+      const thumbnail = data.thumbnail || data.cover || data.image;
+      const download_url = data.downloadUrl || data.download_url || mediaUrls[0];
       if (!download_url) throw new Error('No downloadable content found. Make sure the post is public.');
 
       const caption = `📸 *Instagram Video*\n\n${getFooter()}`;

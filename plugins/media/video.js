@@ -1,10 +1,8 @@
-import axios from 'axios';
-import { waterfallDownload } from '../../lib/api/gifted.js';
+import { meganDownload } from '../../lib/api/megan.js';
 import { sendBtnOrText, extractButtonId, getFooter } from '../../lib/buttonHandler.js';
 import { isEnabled } from '../../lib/database/settings.js';
 import { sendVideoSmart } from '../../lib/utils/mediaUtils.js';
 
-const VIDEO_ENDPOINTS = ['ytmp4v2', 'ytvideo', 'ytv', 'ytmp4', 'savetubemp4', 'savemp4'];
 
 export default {
   name:        'video',
@@ -23,22 +21,14 @@ export default {
     await m.react('🔍');
 
     try {
-      const response = await axios.get(`https://yts.gifted.co.ke/?q=${encodeURIComponent(query)}`);
-      const videos = response.data.videos.filter(v => v.type === 'video');
-      
-      if (!videos.length) return m.reply('❌ No results found.');
-      
-      const video = videos[0];
-
       await m.react('⬇️');
-
-      let result;
-      try {
-        result = await waterfallDownload(video.url, VIDEO_ENDPOINTS, { timeout: 60000 });
-      } catch {
-        await m.react('❌'); m._failed = true;
-        return m.reply('❌ All download services unavailable. Try again later.');
-      }
+      const result = await meganDownload('/download/mp4', { q: query }, 120_000);
+      const video = {
+        name: result.title || 'YouTube video',
+        url: result.youtubeUrl || result.url,
+        duration: result.searchResult?.duration || result.duration || '?',
+        thumbnail: result.thumbnail,
+      };
 
       const caption = `🎬 *${video.name}*\n⏱️ ${video.duration}\n\n${getFooter()}`;
 

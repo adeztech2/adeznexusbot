@@ -1,4 +1,4 @@
-import { giftedGet } from '../../lib/api/gifted.js';
+import { meganRequest, pickResult } from '../../lib/api/megan.js';
 import { sendBtnOrText, extractButtonId, getFooter } from '../../lib/buttonHandler.js';
 import { isEnabled } from '../../lib/database/settings.js';
 
@@ -17,15 +17,14 @@ export default {
     if (!url.includes('tiktok.com')) return m.reply('❌ That does not look like a TikTok URL.');
     await m.react('⬇️');
     try {
-      const endpoints = ['tiktok', 'tiktokdlv2', 'tiktokdlv3', 'tiktokdlv4'];
-      let result = null;
-      for (const ep of endpoints) {
-        try {
-          const data = await giftedGet(`/api/download/${ep}`, { url }, 25_000);
-          if (data?.success && data?.result?.video) { result = data.result; break; }
-        } catch {}
-      }
-      if (!result) throw new Error('All endpoints failed or returned no video.');
+      const payload = await meganRequest('/api/download/tiktok', { params: { url }, timeout: 120_000 });
+      const { data, mediaUrls } = pickResult(payload);
+      const result = {
+        ...data,
+        video: data.video || data.downloadUrl || data.download_url || data.play || mediaUrls[0],
+        music: data.music || data.musicUrl || data.music_url,
+      };
+      if (!result.video) throw new Error('Megan returned no TikTok video URL.');
 
       const { title, video, music, cover, author } = result;
       const caption = `🎵 *${title || 'TikTok Video'}*\n👤 ${author?.name || ''}\n\n${getFooter()}`;

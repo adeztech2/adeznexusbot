@@ -1,11 +1,8 @@
-import axios from 'axios';
-import { waterfallDownload, GIFTED_KEY } from '../../lib/api/gifted.js';
-import { MP3_API_URL } from '../../config.js';
+import { meganDownload } from '../../lib/api/megan.js';
 import { sendBtnOrText, extractButtonId, getFooter } from '../../lib/buttonHandler.js';
 import { isEnabled } from '../../lib/database/settings.js';
 import { sendAudioSmart } from '../../lib/utils/mediaUtils.js';
 
-const AUDIO_ENDPOINTS = ['ytmp3v2', 'ytaudio', 'yta', 'ytmp3', 'savetubemp3', 'savemp3'];
 
 function formatViews(views) {
   if (!views) return '?';
@@ -31,44 +28,16 @@ export default {
     await m.react('🔍');
 
     try {
-      const response = await axios.get(`https://yts.gifted.co.ke/?q=${encodeURIComponent(query)}`);
-      const videos = response.data.videos.filter(v => v.type === 'video');
-      
-      if (!videos.length) return m.reply('❌ No results found.');
-
-      const video = videos[0];
-      const song = {
-        title: video.name,
-        url: video.url,
-        duration: video.duration,
-        views: video.views,
-        thumbnail: video.thumbnail,
-        author: video.author
-      };
-
       await m.react('⬇️');
-
-      let result;
-      // Primary: mcow.gifted.co.ke — /api/yta endpoint, no apikey required
-      try {
-        const resp = await axios.get(`${MP3_API_URL}/api/yta`, {
-          params: { url: song.url },
-          timeout: 40000,
-        });
-        const r = resp.data?.result;
-        if (resp.data?.success && r?.download_url) {
-          result = { ...r, download_url: r.download_url };
-        }
-      } catch {}
-      // Fallback: api.gifted.co.ke
-      if (!result) {
-        try {
-          result = await waterfallDownload(song.url, AUDIO_ENDPOINTS, { timeout: 40000 });
-        } catch {
-          await m.react('❌'); m._failed = true;
-          return m.reply('❌ All download services unavailable. Try again later.');
-        }
-      }
+      const result = await meganDownload('/download/mp3', { q: query }, 120_000);
+      const song = {
+        title: result.title || 'YouTube audio',
+        url: result.youtubeUrl || result.url,
+        duration: result.searchResult?.duration || result.duration || '?',
+        views: result.views,
+        thumbnail: result.thumbnail,
+        author: result.searchResult?.channelTitle || result.author,
+      };
 
       if (!isEnabled('useButtons')) {
         await sendAudioSmart(sock, m.from, result.download_url, {
