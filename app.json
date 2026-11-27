@@ -46,6 +46,16 @@
       "description": "Bot command prefix",
       "value": ".",
       "required": true
+    },
+    "MEGAN_API_URL": {
+      "description": "Megan API base URL",
+      "value": "https://apis.megan.qzz.io",
+      "required": true
+    },
+    "MEGAN_API_KEY": {
+      "description": "Megan API key (keep this value private)",
+      "value": "your_megan_api_key",
+      "required": true
     }
   }
 }

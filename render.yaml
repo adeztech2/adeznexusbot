@@ -26,5 +26,9 @@ services:
         value: https://api.gifted.co.ke
       - key: GIFTED_API_KEY
         value: gifted
+      - key: MEGAN_API_URL
+        value: https://apis.megan.qzz.io
+      - key: MEGAN_API_KEY
+        sync: false
       - key: KEEP_ALIVE_MINUTES
         value: "4"
