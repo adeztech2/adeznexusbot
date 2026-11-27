@@ -1,4 +1,3 @@
-
 import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first');
 
@@ -67,13 +66,15 @@ import {
 } from './lib/utils/botUtils.js';
 
 // ── Suppress noisy logs ────────────────────────────────────────────────
-const _noisy = /Closing session|Opening session|Closing open session|Removing old closed session|Migrating session|SessionEntry|Session already closed|Session already open/;
+const _noisy = /Closing session|Opening session|Closing open session|Removing old closed session|Migrating session|SessionEntry|Session already closed|Session already open|Session error|Failed to decrypt message|Bad MAC/;
 
-for (const m of ['log', 'info', 'warn']) {
+for (const m of ['log', 'info', 'warn', 'error']) {
   const orig = console[m].bind(console);
 
   console[m] = (...a) => {
-    if (typeof a[0] === 'string' && _noisy.test(a[0])) return;
+    const first = a[0];
+    if (typeof first === 'string' && _noisy.test(first)) return;
+    if (first instanceof Error && /Bad MAC/.test(first.message)) return;
     orig(...a);
   };
 }
@@ -94,13 +95,16 @@ let botStatus = 'offline';
 let botPhoneNumber = null;
 let lastSeenTime = null;
 
-let _heartbeatTimer = null;
 let _watchdogTimer = null;
 let _lastMsgReceived = 0;
 let _startupMsgSent = false;
 
+let _starting = false;      // a startBot() is in progress
+let _reconnecting = false;  // a reconnect is already scheduled
+
 const BASE_RETRY_DELAY = 5_000;
 const MAX_RETRY_DELAY = 300_000;
+const WATCHDOG_IDLE_MS = 30 * 60_000;
 
 let retryCount = 0;
 
@@ -125,30 +129,175 @@ app.get('/status', (req, res) => {
   });
 });
 
+// ── Per-message handler ────────────────────────────────────────────────
+async function handleOneMessage(s, m, type) {
+  if (!m?.message) return;
+
+  _lastMsgReceived = Date.now();
+  lastSeenTime = new Date().toISOString();
+
+  const msgTs = Number(m.messageTimestamp || 0) * 1000;
+
+  const isFresh =
+    !msgTs ||
+    msgTs >= ((getBotStartTime() ?? 0) - 60_000);
+
+  try {
+    const protoType = m.message?.protocolMessage?.type;
+
+    // Edited messages
+    if (protoType === 14 || m.message?.editedMessage) {
+      if (isFresh && isEnabled('antiEdit')) {
+        antiEditHandler(s, m).catch(() => {});
+      }
+      return;
+    }
+
+    // Deleted messages
+    if (protoType === 0) {
+      if (isFresh && isEnabled('antiDelete')) {
+        handleDeletedMessage(s, m).catch(() => {});
+      }
+      return;
+    }
+
+    // Save messages
+    if (isFresh && (isEnabled('antiDelete') || isEnabled('antiEdit'))) {
+      saveMessage(m).catch(err => {
+        console.error('saveMessage failed:', err.message);
+      });
+    }
+
+    if (!isFresh) return;
+
+    const msg = await serialize(s, m);
+
+    handleListResponse(s, msg).catch(() => {});
+    handleInteractiveResponse(s, msg).catch(() => {});
+
+    handleAutoViewStatus(s, m).catch(() => {});
+    handleAutoReactStatus(s, m).catch(() => {});
+    handleAutoNewsletterReact(s, m).catch(() => {});
+    handleAutoJoinGroup(s, m).catch(() => {});
+
+    handleAntiLink(s, msg).catch(err => {
+      console.error('Antilink error:', err.message);
+    });
+
+    sendPresence(s, m).catch(() => {});
+
+    handleCommand(s, msg).catch(err => {
+      console.error('Command error:', err.message);
+    });
+
+    handleChatbot(s, msg).catch(err => {
+      console.error('Chatbot error:', err.message);
+    });
+  } catch (err) {
+    console.error('Message handler error:', err.message);
+  }
+}
+
+// ── Connected notification ─────────────────────────────────────────────
+async function sendConnectedNotice(s) {
+  try {
+    if (!s?.user) return;
+
+    const selfJid = normalizeJid(s.user.id);
+
+    const prefix    = getSetting('prefix') || '.';
+    const botName   = getSetting('botName') || 'ADEZ NEXUS';
+    const ownerName = getSetting('ownerName') || 'Owner';
+    const mode      = getSetting('mode') === 'public' ? 'Public' : 'Private';
+    const host      = process.env.HOST_PLATFORM || 'ADEZ HOST';
+
+    let time = '';
+    try {
+      time = new Date().toLocaleString('en-GB', {
+        timeZone: getSetting('timezone') || 'Africa/Nairobi'
+      });
+    } catch {
+      time = new Date().toISOString();
+    }
+
+    const text =
+      `✅ *Bot is connected and ready*\n\n` +
+      `▸ *Bot:* ${botName}\n` +
+      `▸ *Status:* 🟢 Online\n` +
+      `▸ *Number:* ${botPhoneNumber}\n` +
+      `▸ *Owner:* ${ownerName}\n` +
+      `▸ *Prefix:* ${prefix}\n` +
+      `▸ *Mode:* ${mode}\n` +
+      `▸ *Host:* ${host}\n` +
+      `▸ *Time:* ${time}`;
+
+    const buttons = [
+      { id: `${prefix}menu`, text: '📜 Menu' },
+      { id: `${prefix}ping`, text: '⚡ Ping' }
+    ];
+
+    const channelUrl = getSetting('channelUrl');
+    const groupUrl   = getSetting('groupUrl');
+
+    if (channelUrl) {
+      buttons.push({
+        name: 'cta_url',
+        buttonParamsJson: JSON.stringify({ display_text: '📢 Channel', url: channelUrl })
+      });
+    }
+
+    if (groupUrl) {
+      buttons.push({
+        name: 'cta_url',
+        buttonParamsJson: JSON.stringify({ display_text: '👥 Support Group', url: groupUrl })
+      });
+    }
+
+    try {
+      await sendButtons(s, selfJid, {
+        title: `${botName} CONNECTED`,
+        text,
+        footer: getFooter(),
+        buttons
+      });
+    } catch (btnErr) {
+      console.error('Connected alert buttons failed, sending text:', btnErr.message);
+      await s.sendMessage(selfJid, { text: `*${botName} CONNECTED*\n\n${text}` });
+    }
+  } catch (err) {
+    console.error('Failed to send startup notification:', err.message);
+  }
+}
+
 // ── Bot startup ────────────────────────────────────────────────────────
 async function startBot() {
-  if (sock) {
-    console.log('Bot already running');
+  if (sock || _starting) {
+    console.log('Bot already running or starting');
     return;
   }
+
+  _starting = true;
 
   try {
     botStatus = 'connecting';
     console.log('Starting ADEZ NEXUS...');
 
-    await loadSession(config.sessionId);
-    resolveBotId(config.sessionId);   // each bot gets its own database tables
+    // ORDER MATTERS: table names depend on resolveBotId, and loadSession
+    // checks PostgreSQL for existing creds.
+    resolveBotId(config.sessionId);
     await initDb();
+    await loadSession(config.sessionId);
     await initSettings();
 
     const { state, saveCreds } = await useAuthState();
     const { version } = await fetchLatestWaWebVersion();
 
     if (store) store.destroy();
-
     store = new MessageStore();
 
-    sock = makeWASocket({
+    // `s` is this socket's own reference. Events from an old socket are
+    // ignored once `sock` no longer points at it.
+    const s = makeWASocket({
       auth: {
         creds: state.creds,
         keys: makeCacheableSignalKeyStore(
@@ -172,30 +321,25 @@ async function startBot() {
 
       getMessage: async (key) => {
         if (store) {
-          const msg = await store.loadMessage(
-            key.remoteJid,
-            key.id
-          );
-
+          const msg = await store.loadMessage(key.remoteJid, key.id);
           return msg?.message || undefined;
         }
-
-        return { conversation: 'Error occurred' };
+        return undefined;
       }
     });
 
-    sock._manualClose = false;
+    sock = s;
+    s._manualClose = false;
 
-    enableVerifiedReplies(sock);
-    store.bind(sock.ev);
+    enableVerifiedReplies(s);
+    store.bind(s.ev);
 
-    sock.ev.on('creds.update', saveCreds);
+    s.ev.on('creds.update', saveCreds);
 
     // ── Connection events ─────────────────────────────────────────────
-    sock.ev.on('connection.update', async ({
-      connection,
-      lastDisconnect
-    }) => {
+    s.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
+      if (s !== sock) return; // stale socket, ignore
+
       const statusCode = lastDisconnect?.error?.output?.statusCode;
 
       if (connection === 'open') {
@@ -205,7 +349,7 @@ async function startBot() {
         startPeriodicCleanup();
         startCleanup();
 
-        botPhoneNumber = normalizeJid(sock.user?.id)?.split('@')[0];
+        botPhoneNumber = normalizeJid(s.user?.id)?.split('@')[0];
 
         botStatus = 'online';
         setBotStartTime(Date.now());
@@ -213,151 +357,51 @@ async function startBot() {
         lastSeenTime = new Date().toISOString();
         retryCount = 0;
 
-        // ── Connection watchdog ────────────────────────────────────────
-        if (_heartbeatTimer) {
-          clearInterval(_heartbeatTimer);
-        }
-
-        if (_watchdogTimer) {
-          clearInterval(_watchdogTimer);
-        }
-
+        // Watchdog
+        if (_watchdogTimer) clearInterval(_watchdogTimer);
         _lastMsgReceived = Date.now();
 
         _watchdogTimer = setInterval(() => {
-          if (botStatus !== 'online' || !sock) return;
+          if (botStatus !== 'online' || s !== sock) return;
 
           const idle = Date.now() - _lastMsgReceived;
 
-          if (idle > 5 * 60_000) {
-            console.log(
-              `No messages in ${Math.round(idle / 1000)}s — reconnecting`
-            );
-
-            sock.end(new Error('watchdog'));
+          if (idle > WATCHDOG_IDLE_MS) {
+            console.log(`No messages in ${Math.round(idle / 1000)}s — reconnecting`);
+            s.end(new Error('watchdog'));
           }
         }, 60_000);
 
         console.log(`ADEZ NEXUS CONNECTED as ${botPhoneNumber}`);
 
-        autoFollowChannel(sock).catch(() => {});
-        autoJoinConfiguredGroup(sock).catch(() => {});
+        autoFollowChannel(s).catch(() => {});
+        autoJoinConfiguredGroup(s).catch(() => {});
 
         await loadCommands();
-
         console.log('Commands loaded');
 
-        // ── Connected notification ─────────────────────────────────────
         if (!_startupMsgSent) {
           _startupMsgSent = true;
-
-          setTimeout(async () => {
-            try {
-              if (!sock?.user) return;
-
-              const selfJid = normalizeJid(sock.user.id);
-
-              // ── Connected alert design — edit this block to restyle it ──
-              const prefix    = getSetting('prefix') || '.';
-              const botName   = getSetting('botName') || 'ADEZ NEXUS';
-              const ownerName = getSetting('ownerName') || 'Owner';
-              const mode      = getSetting('mode') === 'public' ? 'Public' : 'Private';
-              const host      = process.env.HOST_PLATFORM || 'ADEZ HOST';
-
-              let time = '';
-              try {
-                time = new Date().toLocaleString('en-GB', {
-                  timeZone: getSetting('timezone') || 'Africa/Nairobi'
-                });
-              } catch {
-                time = new Date().toISOString();
-              }
-
-              const text =
-                `✅ *Bot is connected and ready*\n\n` +
-                `▸ *Bot:* ${botName}\n` +
-                `▸ *Status:* 🟢 Online\n` +
-                `▸ *Number:* ${botPhoneNumber}\n` +
-                `▸ *Owner:* ${ownerName}\n` +
-                `▸ *Prefix:* ${prefix}\n` +
-                `▸ *Mode:* ${mode}\n` +
-                `▸ *Host:* ${host}\n` +
-                `▸ *Time:* ${time}`;
-
-              const buttons = [
-                { id: `${prefix}menu`, text: '📜 Menu' },
-                { id: `${prefix}ping`, text: '⚡ Ping' }
-              ];
-
-              const channelUrl = getSetting('channelUrl');
-              const groupUrl   = getSetting('groupUrl');
-
-              if (channelUrl) {
-                buttons.push({
-                  name: 'cta_url',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: '📢 Channel',
-                    url: channelUrl
-                  })
-                });
-              }
-
-              if (groupUrl) {
-                buttons.push({
-                  name: 'cta_url',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: '👥 Support Group',
-                    url: groupUrl
-                  })
-                });
-              }
-
-              try {
-                await sendButtons(sock, selfJid, {
-                  title: `${botName} CONNECTED`,
-                  text,
-                  footer: getFooter(),
-                  buttons
-                });
-              } catch (btnErr) {
-                // Buttons can fail (rate limits / unsupported client) — fall back to plain text
-                console.error('Connected alert buttons failed, sending text:', btnErr.message);
-                await sock.sendMessage(selfJid, { text: `*${botName} CONNECTED*\n\n${text}` });
-              }
-
-            } catch (err) {
-              console.error(
-                'Failed to send startup notification:',
-                err.message
-              );
-            }
-          }, 5000);
+          setTimeout(() => sendConnectedNotice(s), 5000);
         }
       }
 
       if (connection === 'connecting') {
         botStatus = 'connecting';
         lastSeenTime = new Date().toISOString();
-
         console.log('Connecting...');
       }
 
       if (connection === 'close') {
-        if (_heartbeatTimer) {
-          clearInterval(_heartbeatTimer);
-          _heartbeatTimer = null;
-        }
-
         if (_watchdogTimer) {
           clearInterval(_watchdogTimer);
           _watchdogTimer = null;
         }
 
-        if (sock?._manualClose) {
+        if (s._manualClose) {
           botStatus = 'offline';
           lastSeenTime = new Date().toISOString();
           sock = null;
-
           console.log('Bot closed manually');
           return;
         }
@@ -369,136 +413,62 @@ async function startBot() {
 
         botStatus = 'offline';
         lastSeenTime = new Date().toISOString();
-
         sock = null;
 
         if (statusCode === DisconnectReason.loggedOut) {
-          console.log(
-            'Logged out — session ended. Re-scan QR to reconnect.'
-          );
-
+          console.log('Logged out — session ended. Clear auth_state, re-pair with a fresh SESSION_ID.');
           return;
         }
 
-        console.log(
-          `Disconnect code ${statusCode} — scheduling reconnect`
-        );
+        // Another instance connected with the same session. Do NOT fight it.
+        if (statusCode === DisconnectReason.connectionReplaced) {
+          console.log('Connection replaced by another instance — not reconnecting. Stop duplicate deployments.');
+          return;
+        }
 
-        await reconnectBot();
+        console.log(`Disconnect code ${statusCode} — scheduling reconnect`);
+        reconnectBot();
       }
     });
 
     // ── Group metadata cache ──────────────────────────────────────────
-    sock.ev.on('groups.upsert', (groups) => {
+    s.ev.on('groups.upsert', (groups) => {
       try {
-        groups.forEach(g => {
-          if (g.id) setCachedGroup(g.id, g);
-        });
+        groups.forEach(g => { if (g.id) setCachedGroup(g.id, g); });
       } catch (_) {}
     });
 
-    sock.ev.on('groups.update', (updates) => {
+    s.ev.on('groups.update', (updates) => {
       try {
         updates.forEach(u => {
           if (!u.id) return;
-
           updateCachedGroup(u.id, u);
           metadataCache.invalidate(u.id);
         });
       } catch (_) {}
     });
 
-    sock.ev.on('group-participants.update', async (update) => {
+    s.ev.on('group-participants.update', async (update) => {
+      if (s !== sock) return;
+
       try {
         metadataCache.invalidate(update.id);
-
-        const meta = await sock.groupMetadata(update.id);
-
+        const meta = await s.groupMetadata(update.id);
         setCachedGroup(update.id, meta);
       } catch (_) {}
 
-      // Welcome / goodbye messages
-      handleParticipantsUpdate(sock, update).catch(err => {
+      handleParticipantsUpdate(s, update).catch(err => {
         console.error('Participants handler error:', err.message);
       });
     });
 
     // ── Messages ──────────────────────────────────────────────────────
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    s.ev.on('messages.upsert', async ({ messages, type }) => {
+      if (s !== sock) return;
       if (type !== 'notify' && type !== 'append') return;
 
-      const m = messages[0];
-
-      if (!m?.message) return;
-
-      _lastMsgReceived = Date.now();
-      lastSeenTime = new Date().toISOString();
-
-      const msgTs = Number(m.messageTimestamp || 0) * 1000;
-
-      const isFresh =
-        !msgTs ||
-        msgTs >= ((getBotStartTime() ?? 0) - 60_000);
-
-      try {
-        const protoType = m.message?.protocolMessage?.type;
-
-        // ── Edited messages ───────────────────────────────────────────
-        if (protoType === 14 || m.message?.editedMessage) {
-          if (isFresh && isEnabled('antiEdit')) {
-            antiEditHandler(sock, m).catch(() => {});
-          }
-
-          return;
-        }
-
-        // ── Deleted messages ──────────────────────────────────────────
-        if (protoType === 0) {
-          if (isFresh && isEnabled('antiDelete')) {
-            handleDeletedMessage(sock, m).catch(() => {});
-          }
-
-          return;
-        }
-
-        // ── Save messages ─────────────────────────────────────────────
-        if (
-          isFresh &&
-          (isEnabled('antiDelete') || isEnabled('antiEdit'))
-        ) {
-          saveMessage(m).catch(err => {
-            console.error('saveMessage failed:', err.message);
-          });
-        }
-
-        if (!isFresh) return;
-
-        const msg = await serialize(sock, m);
-
-        handleListResponse(sock, msg).catch(() => {});
-        handleInteractiveResponse(sock, msg).catch(() => {});
-
-        handleAutoViewStatus(sock, m).catch(() => {});
-        handleAutoReactStatus(sock, m).catch(() => {});
-        handleAutoNewsletterReact(sock, m).catch(() => {});
-        handleAutoJoinGroup(sock, m).catch(() => {});
-
-        handleAntiLink(sock, msg).catch(err => {
-          console.error('Antilink error:', err.message);
-        });
-
-        sendPresence(sock, m).catch(() => {});
-
-        handleCommand(sock, msg).catch(err => {
-          console.error('Command error:', err.message);
-        });
-
-        handleChatbot(sock, msg).catch(err => {
-          console.error('Chatbot error:', err.message);
-        });
-
-      } catch (err) {
-        console.error('Message handler error:', err.message);
+      for (const m of messages) {
+        await handleOneMessage(s, m, type);
       }
     });
 
@@ -507,27 +477,35 @@ async function startBot() {
 
     botStatus = 'offline';
     lastSeenTime = new Date().toISOString();
-
     sock = null;
 
-    await reconnectBot();
+    _starting = false;
+    reconnectBot();
+    return;
   }
+
+  _starting = false;
 }
 
-// ── Automatic reconnection ─────────────────────────────────────────────
+// ── Automatic reconnection (only one at a time) ────────────────────────
 async function reconnectBot() {
-  retryCount++;
+  if (_reconnecting) return;
+  _reconnecting = true;
 
-  const delay = Math.min(
-    BASE_RETRY_DELAY * 2 ** (retryCount - 1),
-    MAX_RETRY_DELAY
-  );
+  try {
+    retryCount++;
 
-  console.log(
-    `Reconnecting in ${delay / 1000}s... (attempt ${retryCount})`
-  );
+    const delay = Math.min(
+      BASE_RETRY_DELAY * 2 ** (retryCount - 1),
+      MAX_RETRY_DELAY
+    );
 
-  await new Promise(resolve => setTimeout(resolve, delay));
+    console.log(`Reconnecting in ${delay / 1000}s... (attempt ${retryCount})`);
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+  } finally {
+    _reconnecting = false;
+  }
 
   await startBot();
 }
@@ -536,21 +514,24 @@ async function reconnectBot() {
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => {
     console.log('\nADEZ NEXUS stopped');
-    process.exit(0);
+    try {
+      if (sock) {
+        sock._manualClose = true;
+        sock.end(new Error('shutdown'));
+      }
+    } catch (_) {}
+    // small grace period so in-flight DB writes can finish
+    setTimeout(() => process.exit(0), 1500);
   });
 }
 
-process.on('uncaughtException', console.error);
-process.on('unhandledRejection', console.error);
+process.on('uncaughtException', (e) => console.error('uncaughtException:', e?.message || e));
+process.on('unhandledRejection', (e) => console.error('unhandledRejection:', e?.message || e));
 
 // ── Start server ──────────────────────────────────────────────────────
 app.listen(config.port, '0.0.0.0', () => {
-  console.log(
-    `ADEZ NEXUS server running on port ${config.port}`
-  );
+  console.log(`ADEZ NEXUS server running on port ${config.port}`);
 
   startKeepAlive();
   startBot();
 });
-
-      
